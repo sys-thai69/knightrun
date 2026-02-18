@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bst5mqmm8dh8l"]
+[gd_scene load_steps=9 format=3 uid="uid://bst5mqmm8dh8l"]
 
 [ext_resource type="Texture2D" uid="uid://d0be6mm2624wc" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/428-4286862_spikes-spikes-pixel-art.png" id="1_7k7bx"]
 [ext_resource type="PackedScene" uid="uid://b33msqckg4y6b" path="res://scences/killzone.tscn" id="2_tggh8"]
@@ -46,9 +46,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_bnngr"]
-size = Vector2(16.5, 18)
-
 [node name="Spike" type="Node2D"]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -61,6 +58,5 @@ frame_progress = 0.5574704
 
 [node name="Area2D" parent="." instance=ExtResource("2_tggh8")]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(0, -0.125)
-shape = SubResource("RectangleShape2D_bnngr")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D"]
+polygon = PackedVector2Array(0, -8, -9, 9, 9, 9)
