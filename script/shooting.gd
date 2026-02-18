@@ -51,10 +51,22 @@ func _on_fire_timer_timeout():
     fire_timer.start()
     
 func _on_body_entered(body: Node2D) -> void:
-    print("You died1")
+    if not body.is_in_group("player"):
+        return
+    
+    print("You died!")
     Engine.time_scale = 0.5
-    body.get_node("CollisionShape2D").queue_free()
-    timer.start() # Replace with function body.
+    body.is_dead = true
+    
+    # Launch the player upward and disable collisions so they fall off the map
+    body.velocity.y = -200
+    body.set_collision_mask_value(1, false)
+    body.set_collision_layer_value(1, false)
+    
+    if body.has_node("AnimatedSprite2D"):
+        body.get_node("AnimatedSprite2D").play("jump")
+    
+    get_tree().create_timer(1.0, true, false, true).timeout.connect(_on_timer_timeout)
 
 
 func _on_timer_timeout() -> void:

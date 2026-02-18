@@ -18,6 +18,10 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 
 movie_writer/movie_file="C:/Users/Pheav Chhengthai/Documents/week-2/brackeys_platformer_assets/godot_movie1.avi"
 
+[global_group]
+
+player=""
+
 [input]
 
 move_right={

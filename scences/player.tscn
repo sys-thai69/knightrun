@@ -1,90 +1,7 @@
-[gd_scene load_steps=32 format=3 uid="uid://ro6mhl1yu4rx"]
+[gd_scene load_steps=31 format=3 uid="uid://ro6mhl1yu4rx"]
 
 [ext_resource type="Texture2D" uid="uid://c2piul8uqfjkc" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/knight.png" id="1_uwcw8"]
-
-[sub_resource type="GDScript" id="GDScript_wtcfe"]
-script/source = "extends CharacterBody2D
-
-const SPEED = 100.0
-const JUMP_VELOCITY = -200.0
-
-# --- NEW VARIABLES ---
-var jump_count = 0
-const MAX_JUMPS = 2
-# ---------------------
-
-@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
-
-# --- NEW: Connect to the animation_finished signal ---
-func _ready() -> void:
-    # This connects the sprite's finished signal to our new function
-    sprite.animation_finished.connect(_on_sprite_animation_finished)
-
-# --- NEW: Function to handle the transition to 'idle' after the roll is done ---
-func _on_sprite_animation_finished() -> void:
-    # Only transition to the falling state if the finished animation was the mid-air roll (\"jump1\")
-    # AND we are still in the air (not is_on_floor()).
-    if sprite.animation == \"jump1\" and not is_on_floor():
-        # Play the idle animation for the fall state
-        sprite.play(\"idle\")
-# ----------------------------------------------------------------------------
-
-
-func _physics_process(delta: float) -> void:
-    # Add the gravity.
-    if not is_on_floor():
-        velocity += get_gravity() * delta
-
-    # --- JUMP/GRAVITY LOGIC ---
-    if is_on_floor():
-        jump_count = 0
-        # If we land, always reset to the idle/run state if needed
-        if velocity.x == 0 and sprite.animation != \"idle\":
-            sprite.play(\"idle\")
-    
-    if Input.is_action_just_pressed(\"jump\"):
-        if is_on_floor() or jump_count < MAX_JUMPS:
-            velocity.y = JUMP_VELOCITY
-            jump_count += 1
-            
-            # Animation should play regardless of floor status when jump input is pressed
-            if jump_count == 1:
-                sprite.play(\"jump\")
-            else:
-                # The rolling animation should NOT loop, ensure it's set to one-shot in the editor.
-                sprite.play(\"jump1\") 
-
-    # Get the input direction and handle the movement/deceleration.
-    var direction := Input.get_axis(\"move_left\", \"move_right\")
-    
-    if direction:
-        velocity.x = direction * SPEED
-        
-        # Sprite Flipping Logic
-        if direction > 0:
-            sprite.flip_h = false
-        elif direction < 0:
-            sprite.flip_h = true
-    else:
-        velocity.x = move_toward(velocity.x, 0, SPEED)
-
-    # --- ANIMATION LOGIC (PRIORITY CHECK) ---
-    if not is_on_floor():
-        # If the animation is the jump or the roll, let it finish.
-        # Otherwise, if velocity.y > 0 (falling), we play the designated fall animation (\"idle\").
-        if (sprite.animation != \"jump\" and sprite.animation != \"jump1\") and velocity.y > 0:
-            sprite.play(\"jump\") # Fall animation is now the 'idle' animation
-
-    elif direction != 0:
-        # Playing run only if on the ground and moving
-        sprite.play(\"run\")
-        
-    else:
-        # Playing idle only if on the ground and not moving
-        sprite.play(\"idle\")
-
-    move_and_slide()
-"
+[ext_resource type="Script" uid="uid://jf1qgsrhlake" path="res://script/player.gd" id="2_player"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0e48y"]
 atlas = ExtResource("1_uwcw8")
@@ -303,7 +220,7 @@ size = Vector2(10, 15)
 
 [node name="Player" type="CharacterBody2D"]
 z_index = 1
-script = SubResource("GDScript_wtcfe")
+script = ExtResource("2_player")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(-1, 1)
