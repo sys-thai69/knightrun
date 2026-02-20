@@ -21,6 +21,8 @@ var player_ref: CharacterBody2D = null
 func _ready() -> void:
 	start_y = global_position.y
 	add_to_group("enemy")
+	# Scale HP with NG+
+	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Off-screen optimization
 	var notifier = VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-20, -20, 40, 40)

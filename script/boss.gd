@@ -8,6 +8,7 @@ signal boss_defeated
 # --- Stats ---
 const MAX_HEALTH: int = 30
 var health: int = MAX_HEALTH
+var scaled_max_health: int = MAX_HEALTH  # Actual max after NG+ scaling
 var is_dead: bool = false
 
 # --- Mahoraga Adaptation System ---
@@ -54,6 +55,9 @@ var block_chance: float = 0.3  # 30% chance to block incoming damage
 @onready var attack_collision: CollisionShape2D = $AttackArea/CollisionShape2D
 
 func _ready() -> void:
+    # Scale boss HP with NG+ level
+    health = int(MAX_HEALTH * PlayerData.get_enemy_hp_multiplier())
+    scaled_max_health = health
     if attack_collision:
         attack_collision.disabled = true
     # Find the player
@@ -146,6 +150,8 @@ func _melee_attack() -> void:
         attack_collision.disabled = false
 
     await sprite.animation_finished
+    if is_dead or not is_instance_valid(self):
+        return
 
     # Deal damage at end of animation
     if attack_area:
@@ -174,6 +180,8 @@ func _ranged_attack(dir: int) -> void:
 
     # Wait for the animation to reach the "release" point
     await get_tree().create_timer(0.3).timeout
+    if is_dead or not is_instance_valid(self):
+        return
 
     # Spawn projectile
     if projectile_scene:
@@ -186,6 +194,8 @@ func _ranged_attack(dir: int) -> void:
             proj.shoot_direction = Vector2(dir, 0)
 
     await sprite.animation_finished
+    if is_dead or not is_instance_valid(self):
+        return
     is_acting = false
     _play("idle")
 
@@ -206,6 +216,8 @@ func _slam_impact() -> void:
             if body.is_in_group("player") and body.has_method("take_damage"):
                 body.take_damage(2)
     await get_tree().create_timer(0.2).timeout
+    if is_dead or not is_instance_valid(self):
+        return
     if attack_collision:
         attack_collision.disabled = true
     _play("idle")
@@ -222,6 +234,8 @@ func _block() -> void:
     # Future: swap to "shield" animation when added
     # _play("shield")
     await get_tree().create_timer(1.0).timeout
+    if is_dead or not is_instance_valid(self):
+        return
     is_blocking = false
     is_acting = false
     _play("idle")
@@ -263,9 +277,13 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
         damage_from_distance = 0
         _adaptation_effect()
 
-    # Flash red on hit
-    sprite.modulate = Color.RED
-    get_tree().create_timer(0.15).timeout.connect(func(): sprite.modulate = Color.WHITE)
+    # White flash + scale pop on hit
+    sprite.modulate = Color(3, 3, 3)
+    var flash_tw = create_tween()
+    flash_tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+    var pop_tw = create_tween()
+    pop_tw.tween_property(sprite, "scale", sprite.scale * 1.15, 0.05)
+    pop_tw.tween_property(sprite, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_OUT)
 
     # Phase transitions
     _check_phase()
@@ -274,7 +292,7 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
         die()
 
 func _check_phase() -> void:
-    var hp_percent: float = float(health) / float(MAX_HEALTH)
+    var hp_percent: float = float(health) / float(scaled_max_health)
     if hp_percent <= 0.3 and phase < 3:
         phase = 3
         current_speed = SPEED_PHASE3
@@ -304,19 +322,19 @@ func die() -> void:
     is_dead = true
     velocity = Vector2.ZERO
     boss_defeated.emit()
-    ScreenEffects.shake(8.0, 0.5)
-    ScreenEffects.hit_freeze(0.1)
+    AchievementManager.check_and_unlock("boss_slayer")
+    ScreenEffects.shake(3.0, 0.2)
+    ScreenEffects.hit_freeze(0.06)
     _play("death")
     # Dramatic death: flash and slow
     var tween = create_tween()
     tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
     tween.tween_property(sprite, "modulate", Color.RED, 0.1)
     tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
-    await sprite.animation_finished
-    queue_free()
+    tween.tween_callback(queue_free)
 
 func get_health_percent() -> float:
-    return float(health) / float(MAX_HEALTH)
+    return float(health) / float(scaled_max_health)
 
 # --- HELPER: safe animation player ---
 func _play(anim_name: String) -> void:

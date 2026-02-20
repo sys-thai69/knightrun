@@ -10,7 +10,7 @@ func _ready() -> void:
 
 func set_boss(boss: Node) -> void:
 	boss_ref = boss
-	progress_bar.max_value = boss.MAX_HEALTH
+	progress_bar.max_value = boss.scaled_max_health
 	progress_bar.value = boss.health
 	name_label.text = "Guardian of the Trial"
 	visible = true

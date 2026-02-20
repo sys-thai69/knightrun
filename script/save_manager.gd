@@ -10,10 +10,19 @@ func save_game() -> void:
 		"shield_level": PlayerData.shield_level,
 		"health_level": PlayerData.health_level,
 		"speed_level": PlayerData.speed_level,
+		"has_sword": PlayerData.has_sword,
+		"has_shield": PlayerData.has_shield,
 		"has_ranged": PlayerData.has_ranged,
 		"has_dash": PlayerData.has_dash,
 		"death_count": PlayerData.death_count,
 		"total_coins_earned": PlayerData.total_coins_earned,
+		"checkpoint_x": PlayerData.checkpoint_position.x,
+		"checkpoint_y": PlayerData.checkpoint_position.y,
+		"has_checkpoint": PlayerData.has_checkpoint,
+		"ng_plus_level": PlayerData.ng_plus_level,
+		"achievements": PlayerData.achievements_unlocked,
+		"best_time": PlayerData.best_time,
+		"lore_scrolls_found": PlayerData.lore_scrolls_found,
 	}
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -34,10 +43,20 @@ func load_game() -> bool:
 		PlayerData.shield_level = save_data.get("shield_level", 0)
 		PlayerData.health_level = save_data.get("health_level", 0)
 		PlayerData.speed_level = save_data.get("speed_level", 0)
+		PlayerData.has_sword = save_data.get("has_sword", false)
+		PlayerData.has_shield = save_data.get("has_shield", false)
 		PlayerData.has_ranged = save_data.get("has_ranged", false)
 		PlayerData.has_dash = save_data.get("has_dash", false)
 		PlayerData.death_count = save_data.get("death_count", 0)
 		PlayerData.total_coins_earned = save_data.get("total_coins_earned", 0)
+		var cx = save_data.get("checkpoint_x", 0.0)
+		var cy = save_data.get("checkpoint_y", 0.0)
+		PlayerData.checkpoint_position = Vector2(cx, cy)
+		PlayerData.has_checkpoint = save_data.get("has_checkpoint", false)
+		PlayerData.ng_plus_level = save_data.get("ng_plus_level", 0)
+		PlayerData.achievements_unlocked = save_data.get("achievements_unlocked", [])
+		PlayerData.best_time = save_data.get("best_time", 0.0)
+		PlayerData.lore_scrolls_found = save_data.get("lore_scrolls_found", [])
 		PlayerData.full_heal()
 		PlayerData.coins_changed.emit(PlayerData.coins)
 		return true

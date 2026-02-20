@@ -49,12 +49,25 @@ const PARRY_DURATION = 0.15  # 150ms parry window
 var ranged_cooldown: float = 0.0
 const RANGED_COOLDOWN_TIME = 0.6
 
+# --- Coyote Time & Jump Buffer ---
+var coyote_timer: float = 0.0
+const COYOTE_TIME = 0.1
+var jump_buffer: float = 0.0
+const JUMP_BUFFER_TIME = 0.1
+
+# --- Invincibility Timer ---
+var invincibility_timer: float = 0.0
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_collision: CollisionShape2D = $AttackArea/CollisionShape2D
 @onready var sfx_jump: AudioStreamPlayer = $SFXJump
 @onready var sfx_hurt: AudioStreamPlayer = $SFXHurt
 @onready var sfx_attack: AudioStreamPlayer = $SFXAttack
+
+# --- Ladder ---
+var is_on_ladder: bool = false
+var ladder_count: int = 0  # How many ladder areas overlap
 
 func _ready() -> void:
     add_to_group("player")
@@ -64,6 +77,9 @@ func _ready() -> void:
     attack_area.area_entered.connect(_on_attack_area_area_entered)
     PlayerData.full_heal()
     PlayerData.player_died.connect(_on_player_died)
+    # Register camera for screen shake
+    if has_node("Camera2D"):
+        ScreenEffects.register_camera($Camera2D)
     # Respawn at checkpoint if one was activated
     if PlayerData.has_checkpoint:
         global_position = PlayerData.checkpoint_position
@@ -79,6 +95,9 @@ func get_speed() -> float:
     return BASE_SPEED + PlayerData.get_speed_bonus()
 
 func _physics_process(delta: float) -> void:
+    # ---- Time Trial ----
+    PlayerData.update_time_trial(delta)
+    
     # ---- Timers ----
     if dash_cooldown_timer > 0:
         dash_cooldown_timer -= delta
@@ -86,6 +105,20 @@ func _physics_process(delta: float) -> void:
         ranged_cooldown -= delta
     if parry_window > 0:
         parry_window -= delta
+
+    # ---- Invincibility timer ----
+    if invincibility_timer > 0:
+        invincibility_timer -= delta
+        if invincibility_timer <= 0:
+            invincible = false
+
+    # Dead = no input (checked BEFORE dash so corpse can't dash)
+    if is_dead:
+        velocity.x = 0
+        if not is_on_floor():
+            velocity += get_gravity() * delta
+        move_and_slide()
+        return
 
     # ---- Dash ----
     if is_dashing:
@@ -97,14 +130,31 @@ func _physics_process(delta: float) -> void:
         move_and_slide()
         return
 
-    # Gravity (not during ground pound — it has its own)
-    if not is_on_floor() and not is_ground_pounding:
+    # Gravity (not during ground pound or ladder — it has its own)
+    if not is_on_floor() and not is_ground_pounding and not is_on_ladder:
         velocity += get_gravity() * delta
 
-    # Dead = no input
-    if is_dead:
-        velocity.x = 0
+    # --- Ladder Climbing ---
+    if is_on_ladder:
+        var vert = Input.get_axis("jump", "move_down")  # W = up, S = down
+        velocity.y = vert * 80.0
+        # Allow horizontal movement on ladder
+        var horiz := Input.get_axis("move_left", "move_right")
+        velocity.x = horiz * get_speed() * 0.5
+        if not is_attacking:
+            if vert != 0:
+                sprite.play("run")  # Placeholder for climb animation
+            else:
+                sprite.play("idle")
         move_and_slide()
+        # Jump off ladder
+        if Input.is_action_just_pressed("jump") and vert >= 0:
+            is_on_ladder = false
+            ladder_count = 0  # Force exit
+            velocity.y = JUMP_VELOCITY
+            jump_count = 1
+            if sfx_jump:
+                sfx_jump.play()
         return
 
     # --- Ground Pound ---
@@ -130,7 +180,7 @@ func _physics_process(delta: float) -> void:
                 velocity.y = min(velocity.y, WALL_SLIDE_SPEED)
 
     # --- Shield Block (hold K) / Parry (tap K) ---
-    if Input.is_action_just_pressed("shield") and not is_attacking:
+    if Input.is_action_just_pressed("shield") and not is_attacking and PlayerData.has_shield:
         # Start parry window
         parry_window = PARRY_DURATION
         is_blocking = true
@@ -166,7 +216,7 @@ func _physics_process(delta: float) -> void:
         _ranged_attack()
 
     # --- Charged Attack (hold J) ---
-    if Input.is_action_pressed("attack") and not is_blocking and not is_attacking:
+    if Input.is_action_pressed("attack") and not is_blocking and not is_attacking and PlayerData.has_sword:
         if not is_charging:
             is_charging = true
             charge_time = 0.0
@@ -184,15 +234,29 @@ func _physics_process(delta: float) -> void:
         charge_time = 0.0
         sprite.modulate = Color.WHITE
 
-    # --- Normal Attack (J or Left Click, tap) ---
-    if Input.is_action_just_pressed("attack") and not is_attacking and not is_blocking and not is_charging:
-        pass  # Handled by charge system above (release triggers attack)
+    # --- Instant tap attack (J pressed, fires immediately if not already attacking) ---
+    if Input.is_action_just_pressed("attack") and not is_attacking and not is_blocking and PlayerData.has_sword:
+        # Start charging, but also do instant attack on super-fast taps via release above
+        pass
 
-    # --- Jump ---
+    # --- Coyote Time & Jump Buffer ---
     if is_on_floor():
         jump_count = 0
+        coyote_timer = COYOTE_TIME
+    else:
+        coyote_timer -= delta
 
     if Input.is_action_just_pressed("jump"):
+        jump_buffer = JUMP_BUFFER_TIME
+    if jump_buffer > 0:
+        jump_buffer -= delta
+
+    # --- Variable Jump Height (release early = short hop) ---
+    if Input.is_action_just_released("jump") and velocity.y < 0:
+        velocity.y *= 0.5
+
+    # --- Jump ---
+    if Input.is_action_just_pressed("jump") or (jump_buffer > 0 and is_on_floor()):
         if is_wall_sliding and not is_attacking:
             # Wall jump
             velocity.x = -wall_direction * WALL_JUMP_VELOCITY.x
@@ -206,9 +270,11 @@ func _physics_process(delta: float) -> void:
             if sfx_jump:
                 sfx_jump.play()
             sprite.play("jump")
-        elif is_on_floor() or jump_count < MAX_JUMPS:
+        elif coyote_timer > 0 or jump_count < MAX_JUMPS:
             velocity.y = JUMP_VELOCITY
             jump_count += 1
+            coyote_timer = 0
+            jump_buffer = 0
             if sfx_jump:
                 sfx_jump.play()
             if not is_attacking:
@@ -248,6 +314,7 @@ func _physics_process(delta: float) -> void:
             sprite.play("idle")
 
     move_and_slide()
+    _check_landing()
 
 # --- ATTACKS ---
 
@@ -261,7 +328,7 @@ func _normal_attack() -> void:
     if sfx_attack:
         sfx_attack.play()
     # Safety timer: force-clear is_attacking if animation_finished doesn't fire
-    get_tree().create_timer(0.6).timeout.connect(_force_clear_attack)
+    _start_safe_timer(0.6, _force_clear_attack)
 
 func _charged_attack() -> void:
     is_attacking = true
@@ -272,10 +339,7 @@ func _charged_attack() -> void:
     sprite.play("attack")
     if sfx_attack:
         sfx_attack.play()
-    get_tree().create_timer(0.6).timeout.connect(_force_clear_attack)
-    # Screen shake for charged attack
-    ScreenEffects.shake(5.0, 0.15)
-    ScreenEffects.hit_freeze(0.06)
+    _start_safe_timer(0.6, _force_clear_attack)
 
 func _force_clear_attack() -> void:
     if is_attacking:
@@ -296,27 +360,6 @@ func _ranged_attack() -> void:
     if sfx_attack:
         sfx_attack.play()
 
-func _perform_attack(damage: int, source_type: String = "melee") -> void:
-    for body in attack_area.get_overlapping_bodies():
-        if body in attack_hit_targets:
-            continue
-        if body.has_method("take_hit"):
-            attack_hit_targets.append(body)
-            body.take_hit(damage, source_type)
-            ScreenEffects.hit_freeze(0.04)
-            ScreenEffects.shake(3.0, 0.1)
-            ScreenEffects.spawn_damage_number(body.global_position, damage, Color.WHITE)
-    for area in attack_area.get_overlapping_areas():
-        var target = area
-        if not area.has_method("take_hit") and area.get_parent() and area.get_parent().has_method("take_hit"):
-            target = area.get_parent()
-        if target in attack_hit_targets:
-            continue
-        if target.has_method("take_hit"):
-            attack_hit_targets.append(target)
-            target.take_hit(damage, source_type)
-            ScreenEffects.spawn_damage_number(target.global_position, damage, Color.WHITE)
-
 # Signal-based hit detection: fires whenever something enters the attack area during a swing
 func _on_attack_area_body_entered(body: Node2D) -> void:
     if not is_attacking or body == self:
@@ -326,8 +369,6 @@ func _on_attack_area_body_entered(body: Node2D) -> void:
     if body.has_method("take_hit"):
         attack_hit_targets.append(body)
         body.take_hit(attack_damage, attack_source)
-        ScreenEffects.hit_freeze(0.04)
-        ScreenEffects.shake(3.0, 0.1)
         ScreenEffects.spawn_damage_number(body.global_position, attack_damage, Color.WHITE)
 
 func _on_attack_area_area_entered(area: Area2D) -> void:
@@ -345,14 +386,26 @@ func _on_attack_area_area_entered(area: Area2D) -> void:
 
 func _ground_pound_impact() -> void:
     is_ground_pounding = false
-    ScreenEffects.shake(6.0, 0.2)
-    ScreenEffects.hit_freeze(0.05)
+    ScreenEffects.shake(2.0, 0.1)
+    # Temporarily enable attack collision for ground pound hit detection
+    attack_collision.disabled = false
+    # Force physics update so overlapping bodies are detected
+    attack_area.force_update_transform()
+    await get_tree().physics_frame
     # Damage nearby enemies
     var damage = PlayerData.get_attack_damage()
     for body in attack_area.get_overlapping_bodies():
-        if body.has_method("take_hit"):
+        if body != self and body.has_method("take_hit"):
             body.take_hit(damage, "melee")
             ScreenEffects.spawn_damage_number(body.global_position, damage, Color.ORANGE)
+    for area in attack_area.get_overlapping_areas():
+        var target = area
+        if not area.has_method("take_hit") and area.get_parent() and area.get_parent().has_method("take_hit"):
+            target = area.get_parent()
+        if target.has_method("take_hit"):
+            target.take_hit(damage, "melee")
+            ScreenEffects.spawn_damage_number(target.global_position, damage, Color.ORANGE)
+    attack_collision.disabled = true
     # Check for crumbling platforms below
     var space = get_world_2d().direct_space_state
     var query = PhysicsRayQueryParameters2D.create(global_position, global_position + Vector2(0, 20))
@@ -375,6 +428,44 @@ func _spawn_dash_ghost() -> void:
     tween.tween_property(ghost, "modulate:a", 0.0, 0.3)
     tween.tween_callback(ghost.queue_free)
 
+# --- LADDER ---
+
+func enter_ladder() -> void:
+    ladder_count += 1
+    is_on_ladder = true
+    velocity.y = 0
+    jump_count = 0
+
+func exit_ladder() -> void:
+    ladder_count -= 1
+    if ladder_count <= 0:
+        ladder_count = 0
+        is_on_ladder = false
+
+# --- LANDING DUST ---
+
+var was_in_air: bool = false
+
+func _check_landing() -> void:
+    if is_on_floor() and was_in_air:
+        _spawn_landing_dust()
+    was_in_air = not is_on_floor()
+
+func _spawn_landing_dust() -> void:
+    for i in range(4):
+        var p = Label.new()
+        p.text = "~"
+        p.add_theme_font_size_override("font_size", 6)
+        p.add_theme_color_override("font_color", Color(0.8, 0.75, 0.65, 0.8))
+        p.global_position = global_position + Vector2(randf_range(-6, 6), 10)
+        p.z_index = 50
+        get_parent().add_child(p)
+        var tw = p.create_tween()
+        tw.set_parallel(true)
+        tw.tween_property(p, "position", p.position + Vector2(randf_range(-12, 12), randf_range(-8, -3)), 0.3)
+        tw.tween_property(p, "modulate:a", 0.0, 0.3)
+        tw.chain().tween_callback(p.queue_free)
+
 # --- DAMAGE ---
 
 func take_damage(amount: int = 1) -> void:
@@ -391,12 +482,11 @@ func take_damage(amount: int = 1) -> void:
         if shield_hp <= 0:
             is_blocking = false
         # Shield block effect
-        ScreenEffects.shake(2.0, 0.1)
         sprite.modulate = Color(0.5, 0.5, 1.0)
         # Brief invincibility after shield block to prevent instant re-damage
         invincible = true
-        get_tree().create_timer(0.5).timeout.connect(func():
-            invincible = false
+        invincibility_timer = 0.5
+        _start_safe_timer(0.5, func():
             if is_blocking:
                 sprite.modulate = Color(0.6, 0.8, 1.0)
             else:
@@ -405,30 +495,29 @@ func take_damage(amount: int = 1) -> void:
         return  # Blocked!
 
     PlayerData.take_damage(amount)
-    ScreenEffects.shake(4.0, 0.2)
+    ScreenEffects.shake(1.5, 0.1)
     ScreenEffects.spawn_damage_number(global_position, amount, Color.RED)
     if PlayerData.current_health > 0:
         if sfx_hurt:
             sfx_hurt.play()
         # Brief invincibility
         invincible = true
+        invincibility_timer = 1.0
         _flash_damage()
-        get_tree().create_timer(1.0).timeout.connect(func(): invincible = false)
 
 func _parry_success() -> void:
     # Successful parry: reflect nearby projectiles and stun nearby enemies
     parry_window = 0.0
     # Don't drop shield — player is still holding K
-    ScreenEffects.hit_freeze(0.08)
-    ScreenEffects.shake(3.0, 0.15)
+    ScreenEffects.hit_freeze(0.04)
 
     # Brief invincibility after parry
     invincible = true
-    get_tree().create_timer(0.3).timeout.connect(func(): invincible = false)
+    invincibility_timer = 0.3
 
     # Flash green for parry
     sprite.modulate = Color(0.3, 1.0, 0.3)
-    get_tree().create_timer(0.2).timeout.connect(func():
+    _start_safe_timer(0.2, func():
         if is_blocking:
             sprite.modulate = Color(0.6, 0.8, 1.0)  # Return to shield tint
         else:
@@ -443,10 +532,24 @@ func _parry_success() -> void:
                 proj.reflect()
 
 func _flash_damage() -> void:
-    sprite.modulate = Color(1, 0.3, 0.3)
-    get_tree().create_timer(0.15).timeout.connect(func(): sprite.modulate = Color.WHITE)
-    get_tree().create_timer(0.3).timeout.connect(func(): sprite.modulate = Color(1, 0.3, 0.3))
-    get_tree().create_timer(0.45).timeout.connect(func(): sprite.modulate = Color.WHITE)
+    var tw = create_tween()
+    tw.tween_property(sprite, "modulate", Color(1, 0.3, 0.3), 0.0)
+    tw.tween_property(sprite, "modulate", Color.WHITE, 0.15)
+    tw.tween_property(sprite, "modulate", Color(1, 0.3, 0.3), 0.0)
+    tw.tween_property(sprite, "modulate", Color.WHITE, 0.15)
+
+# --- SAFE TIMER: uses node-owned Timer that dies with the scene ---
+func _start_safe_timer(duration: float, callback: Callable) -> void:
+    var t = Timer.new()
+    t.wait_time = duration
+    t.one_shot = true
+    t.autostart = true
+    add_child(t)
+    t.timeout.connect(func():
+        if is_instance_valid(self):
+            callback.call()
+        t.queue_free()
+    )
 
 func _on_player_died() -> void:
     if is_dead:
@@ -455,8 +558,9 @@ func _on_player_died() -> void:
     is_attacking = false
     is_charging = false
     is_blocking = false
+    is_dashing = false
     is_ground_pounding = false
-    attack_collision.disabled = true
+    attack_collision.set_deferred("disabled", true)
     sprite.modulate = Color.WHITE
     Engine.time_scale = 0.5
     velocity.y = -200

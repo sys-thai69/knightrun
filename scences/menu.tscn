@@ -31,6 +31,12 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
+[node name="RESUME" type="Button" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 33
+text = "RESUME"
+
 [node name="RESTART" type="Button" parent="ColorRect/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -43,6 +49,6 @@ size_flags_vertical = 3
 theme_override_font_sizes/font_size = 32
 text = "EXIT"
 
-[connection signal="pressed" from="ColorRect/VBoxContainer/RESTART" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="ColorRect/VBoxContainer/RESUME" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="ColorRect/VBoxContainer/RESTART" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="ColorRect/VBoxContainer/EXIT" to="." method="_on_exit_pressed"]

@@ -18,6 +18,8 @@ var attack_cooldown: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemy")
+	# Scale HP with NG+
+	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Start looking like a normal chest
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.get_animation_names().size() > 0:
 		sprite.play("closed")
@@ -79,10 +81,8 @@ func _physics_process(delta: float) -> void:
 
 			# Bite attack at close range
 			if dist < 20 and attack_cooldown <= 0:
-				if player_ref.has_method("take_damage"):
-					player_ref.take_damage(2)
-					attack_cooldown = 1.0
-					ScreenEffects.shake(3.0, 0.1)
+				attack_cooldown = 1.0
+				pass  # Damage handled by hurt area only
 		else:
 			velocity.x = 0
 			if sprite and sprite.sprite_frames:
@@ -98,7 +98,6 @@ func _wake_up() -> void:
 	velocity.y = -150
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.get_animation_names().size() > 0:
 		sprite.play("open")
-	ScreenEffects.shake(2.0, 0.1)
 	queue_redraw()
 
 func take_hit(damage: int, _source_type: String = "melee") -> void:
@@ -107,8 +106,13 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 	if not is_awake:
 		_wake_up()
 	health -= damage
-	sprite.modulate = Color.RED
-	get_tree().create_timer(0.1).timeout.connect(func(): sprite.modulate = Color.WHITE)
+	# White flash + scale pop on hit
+	sprite.modulate = Color(3, 3, 3)
+	var flash_tw = create_tween()
+	flash_tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+	var pop_tw = create_tween()
+	pop_tw.tween_property(sprite, "scale", Vector2(1.4, 1.4), 0.05)
+	pop_tw.tween_property(sprite, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_OUT)
 	ScreenEffects.spawn_damage_number(global_position, damage, Color.GOLD)
 	if health <= 0:
 		die()

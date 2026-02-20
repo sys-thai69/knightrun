@@ -29,23 +29,30 @@ func _physics_process(delta):
 
 
 func _on_body_entered(body: Node2D) -> void:
-    if body.name == "Player" or body.name == "player":
+    if body.is_in_group("player"):
         if body.has_method("take_damage"):
             body.take_damage(1)
         set_physics_process(false)
         animated_sprite_2d.visible = false
         $CollisionShape2D.set_deferred("disabled", true)
         queue_free()
+    elif body.has_method("take_hit"):
+        # Reflected fireball hitting an enemy
+        body.take_hit(2, "ranged")
+        queue_free()
     elif body is StaticBody2D:
         queue_free()
 
 func _on_timer_timeout() -> void:
-    Engine.time_scale = 1
+    queue_free()  # Despawn after lifetime, don't touch time_scale
 
 func reflect() -> void:
     direction = -direction
     if animated_sprite_2d:
         animated_sprite_2d.flip_h = direction.x < 0
-    # Reflected fireballs damage enemies
+    # Reflected fireballs damage enemies, not the player
     if is_in_group("projectile"):
         remove_from_group("projectile")
+    # Switch collision to hit enemies instead of player
+    collision_mask = 2  # Layer 2 = enemies/characters
+    collision_layer = 0

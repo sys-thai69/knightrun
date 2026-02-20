@@ -1,19 +1,11 @@
-[gd_scene load_steps=46 format=3 uid="uid://ro6mhl1yu4rx"]
+[gd_scene load_steps=43 format=3 uid="uid://ro6mhl1yu4rx"]
 
 [ext_resource type="Texture2D" uid="uid://c2piul8uqfjkc" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/knight.png" id="1_uwcw8"]
-[ext_resource type="Texture2D" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/knight_swing.png" id="2_swing"]
 [ext_resource type="Script" uid="uid://jf1qgsrhlake" path="res://script/player.gd" id="2_player"]
+[ext_resource type="Texture2D" uid="uid://cgg42ww77emt8" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/knight_swing.png" id="2_swing"]
 [ext_resource type="AudioStream" uid="uid://v4x5i54eq1r0" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sounds/jump.wav" id="3_jump"]
 [ext_resource type="AudioStream" uid="uid://b8xsgu0sct8m0" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sounds/hurt.wav" id="4_hurt"]
 [ext_resource type="AudioStream" uid="uid://dl8l0oxgy01r0" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sounds/tap.wav" id="5_attack"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_sw0"]
-atlas = ExtResource("2_swing")
-region = Rect2(0, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_sw1"]
-atlas = ExtResource("2_swing")
-region = Rect2(32, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sw2"]
 atlas = ExtResource("2_swing")
@@ -151,12 +143,6 @@ region = Rect2(224, 96, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_sw0")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_sw1")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_sw2")
 }, {
 "duration": 1.0,
@@ -289,7 +275,6 @@ size = Vector2(14, 12)
 [node name="Player" type="CharacterBody2D"]
 z_index = 1
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("2_player")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -297,6 +282,7 @@ position = Vector2(-1, 1)
 sprite_frames = SubResource("SpriteFrames_kdubu")
 animation = &"attack"
 autoplay = "idle"
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-1, 5.5)

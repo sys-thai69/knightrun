@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://script/lore_scroll.gd" id="1_scroll"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_scroll"]
+size = Vector2(12, 14)
+
+[node name="LoreScroll" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_scroll")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_scroll")

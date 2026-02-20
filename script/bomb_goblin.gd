@@ -21,6 +21,8 @@ var player_ref: CharacterBody2D = null
 
 func _ready() -> void:
 	add_to_group("enemy")
+	# Scale HP with NG+
+	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Off-screen optimization
 	var notifier = VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-20, -20, 40, 40)
@@ -102,6 +104,13 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 		return
 	health -= damage
 	ScreenEffects.spawn_damage_number(global_position, damage, Color.ORANGE)
+	# White flash + scale pop on hit
+	sprite.modulate = Color(3, 3, 3)
+	var flash_tw = create_tween()
+	flash_tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+	var pop_tw = create_tween()
+	pop_tw.tween_property(sprite, "scale", Vector2(1.4, 1.4), 0.05)
+	pop_tw.tween_property(sprite, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_OUT)
 	if health <= 0:
 		# Killing it prevents explosion
 		is_dead = true

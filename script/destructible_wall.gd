@@ -47,7 +47,7 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 func _break() -> void:
 	is_broken = true
 	PlayerData.add_coins(coin_reward)
-	ScreenEffects.shake(4.0, 0.15)
+	ScreenEffects.shake(1.5, 0.1)
 	# Break apart effect
 	collision.set_deferred("disabled", true)
 	var tween = create_tween()

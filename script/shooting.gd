@@ -15,6 +15,8 @@ func _on_animated_sprite_2d_animation_finished() -> void:
     animated_sprite_2d.play("idle")
 
 func _ready():
+    # Scale HP with New Game+ level
+    health = int(health * PlayerData.get_enemy_hp_multiplier())
     animated_sprite_2d.play("idle")
     fire_timer.start()
     if shoot_direction.x > 0:
@@ -39,16 +41,19 @@ func _on_body_entered(body: Node2D) -> void:
         return
     if body.has_method("take_damage"):
         body.take_damage(1)
-    else:
-        # Fallback: old death behavior
-        body.is_dead = true
 
 func take_hit(damage: int, _source_type: String = "melee") -> void:
     if is_dead:
         return
     health -= damage
-    animated_sprite_2d.modulate = Color.RED
-    get_tree().create_timer(0.1).timeout.connect(func(): animated_sprite_2d.modulate = Color.WHITE)
+    # White flash on hit
+    animated_sprite_2d.modulate = Color(3, 3, 3)
+    var flash_tw = create_tween()
+    flash_tw.tween_property(animated_sprite_2d, "modulate", Color.WHITE, 0.12)
+    # Scale pop
+    var pop_tw = create_tween()
+    pop_tw.tween_property(animated_sprite_2d, "scale", Vector2(1.4, 1.4), 0.05)
+    pop_tw.tween_property(animated_sprite_2d, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_OUT)
     if health <= 0:
         die()
 
@@ -56,8 +61,26 @@ func die() -> void:
     is_dead = true
     fire_timer.stop()
     PlayerData.add_coins(COIN_DROP)
+    AchievementManager.check_and_unlock("first_kill")
+    AchievementManager.check_coin_achievements()
+    _spawn_death_particles()
     var tween = create_tween()
     tween.set_parallel(true)
     tween.tween_property(animated_sprite_2d, "modulate:a", 0.0, 0.3)
     tween.tween_property(animated_sprite_2d, "scale", Vector2.ZERO, 0.3)
     tween.chain().tween_callback(queue_free)
+
+func _spawn_death_particles() -> void:
+    for i in range(6):
+        var p = Label.new()
+        p.text = "*"
+        p.add_theme_font_size_override("font_size", 8)
+        p.add_theme_color_override("font_color", Color.MEDIUM_PURPLE)
+        p.global_position = global_position + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+        p.z_index = 50
+        get_parent().add_child(p)
+        var tw = p.create_tween()
+        tw.set_parallel(true)
+        tw.tween_property(p, "position", p.position + Vector2(randf_range(-20, 20), randf_range(-30, -10)), 0.4)
+        tw.tween_property(p, "modulate:a", 0.0, 0.4)
+        tw.chain().tween_callback(p.queue_free)

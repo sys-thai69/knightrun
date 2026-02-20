@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=4 uid="uid://cra81my2rq4qp"]
+[gd_scene load_steps=37 format=4 uid="uid://cra81my2rq4qp"]
 
 [ext_resource type="PackedScene" uid="uid://w7afml1n6scj" path="res://scences/tile_map_layer.tscn" id="1_tqpm0"]
 [ext_resource type="PackedScene" uid="uid://ro6mhl1yu4rx" path="res://scences/player.tscn" id="2_nkw88"]
@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" path="res://enemy/mimic_chest.tscn" id="26_mc"]
 [ext_resource type="PackedScene" path="res://scenes/mechanics/bounce_pad.tscn" id="27_bp"]
 [ext_resource type="PackedScene" path="res://scenes/mechanics/crumbling_platform.tscn" id="28_cp"]
+[ext_resource type="PackedScene" path="res://scenes/lore_scroll.tscn" id="29_65y2b"]
 [ext_resource type="PackedScene" path="res://scenes/mechanics/timed_spikes.tscn" id="29_ts"]
 
 [sub_resource type="Animation" id="Animation_vqmr0"]
@@ -381,7 +382,7 @@ position = Vector2(1344, -365)
 [node name="BossHPBar" parent="." instance=ExtResource("18_bhp")]
 
 [node name="FinishLine" parent="." instance=ExtResource("19_fin")]
-position = Vector2(1735, -103)
+position = Vector2(1451, -327)
 
 [node name="BGMusic" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("20_mus")
@@ -414,10 +415,10 @@ position = Vector2(1200, -350)
 position = Vector2(1400, -350)
 
 [node name="MimicChest1" parent="." instance=ExtResource("26_mc")]
-position = Vector2(520, -115)
+position = Vector2(464, -392)
 
 [node name="BouncePad1" parent="." instance=ExtResource("27_bp")]
-position = Vector2(1236, -394)
+position = Vector2(1129, -327)
 
 [node name="CrumblingPlatform1" parent="." instance=ExtResource("28_cp")]
 position = Vector2(161, -263)
@@ -535,3 +536,6 @@ position = Vector2(612, -332)
 
 [node name="shooting_slime3" parent="." instance=ExtResource("12_y73xg")]
 position = Vector2(546, -397)
+
+[node name="LoreScroll" parent="." instance=ExtResource("29_65y2b")]
+position = Vector2(534, -329)

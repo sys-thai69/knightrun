@@ -1,11 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://cdsvpeqhqf1ek"]
+[gd_scene load_steps=4 format=3 uid="uid://cdsvpeqhqf1ek"]
 
 [ext_resource type="Texture2D" uid="uid://b1oni30f2m6na" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/world_tileset.png" id="1_6k0lf"]
+[ext_resource type="Script" path="res://script/ladder.gd" id="2_ladder"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_p268l"]
 size = Vector2(15.421875, 14.0625)
 
 [node name="AnimatableBody2D" type="AnimatableBody2D"]
+script = ExtResource("2_ladder")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(0.8750003, -0.7500003)

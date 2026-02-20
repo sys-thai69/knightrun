@@ -41,7 +41,7 @@ func _process(delta: float) -> void:
 
 		# Warning flash before extending
 		if is_extended:
-			ScreenEffects.shake(1.0, 0.05)
+			pass  # Visual pop only — no screen shake
 
 func _update_visuals() -> void:
 	if is_extended:

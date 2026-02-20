@@ -20,6 +20,7 @@ PlayerData="*res://script/player_data.gd"
 GameManager="*res://script/gamemanager.gd"
 ScreenEffects="*res://script/screen_effects.gd"
 SaveManager="*res://script/save_manager.gd"
+AchievementManager="*res://script/achievement_manager.gd"
 
 [editor]
 

@@ -18,6 +18,8 @@ var facing_right: bool = true
 
 func _ready() -> void:
 	add_to_group("enemy")
+	# Scale HP with NG+
+	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Off-screen optimization
 	var notifier = VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-20, -20, 40, 40)

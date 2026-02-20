@@ -53,9 +53,13 @@ text = "New Game"
 [node name="ContinueBtn" type="Button" parent="VBoxContainer"]
 text = "Continue"
 
+[node name="TimeTrialBtn" type="Button" parent="VBoxContainer"]
+text = "Time Trial"
+
 [node name="QuitBtn" type="Button" parent="VBoxContainer"]
 text = "Quit"
 
 [connection signal="pressed" from="VBoxContainer/NewGameBtn" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="VBoxContainer/ContinueBtn" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="VBoxContainer/TimeTrialBtn" to="." method="_on_time_trial_pressed"]
 [connection signal="pressed" from="VBoxContainer/QuitBtn" to="." method="_on_quit_pressed"]

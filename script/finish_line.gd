@@ -9,19 +9,16 @@ func _ready():
     pass
 
 func _on_body_entered(body: Node2D) -> void:
-    # 1. Check if the entering body is the Player
-    # You can use 'is_in_group("player")' if you added your player to a group.
-    if body.name == "Player" or body.name == "player": 
-        # Or a more robust check:
-        # if body is CharacterBody2D and body.get_parent().name == "Player":
-
-        print("Player crossed the finish line!")
-        
-        # 2. Call a function to handle the win/level completion
-        handle_win()
+    if not body.is_in_group("player"):
+        return
+    handle_win()
 
 func handle_win():
-    # Option A: Reload the level (quick and dirty restart)
+    # Stop time trial if active and check achievement
+    if PlayerData.time_trial_active:
+        PlayerData.stop_time_trial()
+        AchievementManager.check_time_achievement()
+    
     get_tree().paused = true
     
     # 2. Instantiate the Win Screen

@@ -11,11 +11,14 @@ var health: int = 2
 var is_dead: bool = false
 var player_ref: CharacterBody2D = null
 var is_visible_to_player: bool = false
+var _visibility_tween: Tween = null
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
 	add_to_group("enemy")
+	# Scale HP with NG+
+	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Ghosts don't collide with terrain — they float through walls
 	set_collision_mask_value(1, false)
 	modulate = Color(1, 1, 1, 0.05)  # Start nearly invisible (whole node)
@@ -49,12 +52,16 @@ func _physics_process(delta: float) -> void:
 		# Visibility based on distance
 		if dist < REVEAL_RANGE and not is_visible_to_player:
 			is_visible_to_player = true
-			var tween = create_tween()
-			tween.tween_property(self, "modulate:a", 0.8, 0.3)
+			if _visibility_tween:
+				_visibility_tween.kill()
+			_visibility_tween = create_tween()
+			_visibility_tween.tween_property(self, "modulate:a", 0.8, 0.3)
 		elif dist >= REVEAL_RANGE and is_visible_to_player:
 			is_visible_to_player = false
-			var tween = create_tween()
-			tween.tween_property(self, "modulate:a", 0.05, 0.5)
+			if _visibility_tween:
+				_visibility_tween.kill()
+			_visibility_tween = create_tween()
+			_visibility_tween.tween_property(self, "modulate:a", 0.05, 0.5)
 
 		# Chase if in detection range
 		if dist < DETECTION_RANGE:
