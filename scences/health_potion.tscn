@@ -1,0 +1,58 @@
+[gd_scene load_steps=9 format=3 uid="uid://dc2e8g63iwgaf"]
+
+[ext_resource type="Script" uid="uid://c7q202elpvhjy" path="res://script/health_potion.gd" id="1_potion"]
+[ext_resource type="Texture2D" uid="uid://cxukji7tmuyya" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/fruit.png" id="2_sprite"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5urri"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xc7g0"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qwsbu"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c5ro3"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 48, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_cr7oq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5urri")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xc7g0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qwsbu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c5ro3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pot"]
+radius = 6.0
+
+[node name="HealthPotion" type="Area2D"]
+collision_mask = 2
+script = ExtResource("1_potion")
+
+[node name="Sprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(1, 0.2, 0.3, 1)
+sprite_frames = SubResource("SpriteFrames_cr7oq")
+autoplay = "default"
+frame_progress = 0.6888033
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pot")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

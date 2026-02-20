@@ -1,0 +1,87 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://script/shop.gd" id="1_shop"]
+
+[node name="Shop" type="CanvasLayer"]
+layer = 11
+process_mode = 3
+script = ExtResource("1_shop")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -170.0
+offset_right = 160.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 5.0
+offset_right = 310.0
+offset_bottom = 25.0
+text = "⚔ UPGRADE SHOP ⚔"
+horizontal_alignment = 1
+
+[node name="CoinsLabel" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 25.0
+offset_right = 310.0
+offset_bottom = 45.0
+text = "Coins: 0"
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 295.0
+offset_right = 310.0
+offset_bottom = 325.0
+text = "ATK: 1 | Shield: 1 | HP: 3/3 | SPD: 100"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 300.0
+offset_bottom = 290.0
+
+[node name="SwordBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Sword Lv0 → Lv1 (5 coins)"
+
+[node name="ShieldBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Shield Lv0 → Lv1 (5 coins)"
+
+[node name="HealthBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Health Lv0 → Lv1 (8 coins)"
+
+[node name="SpeedBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Speed Lv0 → Lv1 (5 coins)"
+
+[node name="PotionBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Health Potion (3 coins)"
+
+[node name="RangedBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Throwing Knife (12 coins)"
+
+[node name="DashBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Dash (10 coins)"
+
+[node name="CloseBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Close Shop"

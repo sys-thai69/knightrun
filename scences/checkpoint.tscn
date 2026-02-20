@@ -1,0 +1,83 @@
+[gd_scene load_steps=11 format=3 uid="uid://clqtqaix6fwv3"]
+
+[ext_resource type="Script" uid="uid://cbhc5nbdvl4fh" path="res://script/checkpoint.gd" id="1_checkpoint"]
+[ext_resource type="Texture2D" uid="uid://bdlj74wocl68j" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/sr28d59f96993aws3.png" id="2_sprite"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yidpk"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 0, 288, 288)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1hf6h"]
+atlas = ExtResource("2_sprite")
+region = Rect2(288, 0, 288, 288)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lb3l4"]
+atlas = ExtResource("2_sprite")
+region = Rect2(576, 0, 288, 288)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m5rtf"]
+atlas = ExtResource("2_sprite")
+region = Rect2(0, 288, 288, 288)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2eno6"]
+atlas = ExtResource("2_sprite")
+region = Rect2(288, 288, 288, 288)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_va7ht"]
+atlas = ExtResource("2_sprite")
+region = Rect2(576, 288, 288, 288)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_41apy"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yidpk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1hf6h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lb3l4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m5rtf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2eno6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_va7ht")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chk"]
+size = Vector2(14, 14)
+
+[node name="Checkpoint" type="Area2D"]
+collision_mask = 2
+script = ExtResource("1_checkpoint")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.06, 0.06)
+sprite_frames = SubResource("SpriteFrames_41apy")
+autoplay = "default"
+frame = 5
+frame_progress = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-1, -2)
+shape = SubResource("RectangleShape2D_chk")
+
+[node name="InteractLabel" type="Label" parent="."]
+visible = false
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = -10.0
+text = "Press E"
+horizontal_alignment = 1
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

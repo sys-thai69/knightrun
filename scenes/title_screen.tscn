@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://script/title_screen.gd" id="1"]
+
+[node name="TitleScreen" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.12, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 60.0
+offset_right = 150.0
+offset_bottom = 120.0
+horizontal_alignment = 1
+text = "KNIGHTFALL"
+label_settings = null
+
+[node name="SubtitleLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 110.0
+offset_right = 120.0
+offset_bottom = 130.0
+horizontal_alignment = 1
+text = "A Knight's Trial Awaits"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -40.0
+offset_right = 80.0
+offset_bottom = 60.0
+
+[node name="NewGameBtn" type="Button" parent="VBoxContainer"]
+text = "New Game"
+
+[node name="ContinueBtn" type="Button" parent="VBoxContainer"]
+text = "Continue"
+
+[node name="QuitBtn" type="Button" parent="VBoxContainer"]
+text = "Quit"
+
+[connection signal="pressed" from="VBoxContainer/NewGameBtn" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="VBoxContainer/ContinueBtn" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="VBoxContainer/QuitBtn" to="." method="_on_quit_pressed"]

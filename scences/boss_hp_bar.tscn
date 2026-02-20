@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://script/boss_hp_bar.gd" id="1_bhp"]
+
+[node name="BossHPBar" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_bhp")
+
+[node name="NameLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 10.0
+offset_right = 100.0
+offset_bottom = 30.0
+grow_horizontal = 2
+text = "Guardian of the Trial"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 30.0
+offset_right = 120.0
+offset_bottom = 44.0
+grow_horizontal = 2
+max_value = 20.0
+value = 20.0
+show_percentage = false

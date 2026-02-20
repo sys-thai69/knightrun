@@ -1,0 +1,200 @@
+[gd_scene load_steps=27 format=3 uid="uid://g35qmmkwwek8"]
+
+[ext_resource type="Script" uid="uid://das56m45lcuc4" path="res://script/boss.gd" id="1_boss"]
+[ext_resource type="Texture2D" uid="uid://2g63s4wfoh5a" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_0.png" id="5_wi71j"]
+[ext_resource type="Texture2D" uid="uid://dae85e3fpbg2c" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_1.png" id="6_5i64x"]
+[ext_resource type="Texture2D" uid="uid://dhxdh86h0fvbt" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_2.png" id="7_yejys"]
+[ext_resource type="Texture2D" uid="uid://cceirlbgsaw58" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/ranged_4.png" id="10_n668i"]
+[ext_resource type="Texture2D" uid="uid://du1nl1rqeydw0" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/ranged_5.png" id="11_ar228"]
+[ext_resource type="Texture2D" uid="uid://c2gcvsja00ttp" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/ranged_6.png" id="12_01fg4"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_3mv6w"]
+load_path = "res://.godot/imported/death_1.png-4e2198496dde8fdff03635ba71d9d716.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ehu3s"]
+load_path = "res://.godot/imported/death_2.png-c1cecb8e5807b1e56f8d98ff3670c408.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_tpc2k"]
+load_path = "res://.godot/imported/attack_2.png-b47e90dc60848ee13c6ab955d740a041.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_svpuv"]
+load_path = "res://.godot/imported/attack_1.png-2fcb9f7e5dd60b990150c08d4715223b.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_g4b5a"]
+load_path = "res://.godot/imported/death_3.png-16b36e54219acb6a59e76d568f210572.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_c00ts"]
+load_path = "res://.godot/imported/death_4.png-fa2eda0b523ca37985abafcdf6a7923e.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_1nvie"]
+load_path = "res://.godot/imported/death_5.png-0c3ff397b31a3701cb43b3d44d4b1f99.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_gipvu"]
+load_path = "res://.godot/imported/idle_0.png-cda9fb9b0597241d266e8c1b0630674f.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_c8m2r"]
+load_path = "res://.godot/imported/idle_2.png-291762b39e223cd1b1e46281c084ab7b.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_6emkg"]
+load_path = "res://.godot/imported/idle_3.png-13c6aed2cd9d158b1a7c61eb05f19c07.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_aiw20"]
+load_path = "res://.godot/imported/walk_0.png-70188996ae104ce3b219321ceb4cbb21.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_q24dr"]
+load_path = "res://.godot/imported/walk_1.png-01b65836ed23a12d2f78747fa7b0c163.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_dagfb"]
+load_path = "res://.godot/imported/walk_2.png-efd70006b1f7ad291564b827ae6a163f.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_nkuc2"]
+load_path = "res://.godot/imported/walk_3.png-5ea1ac481b227d80b41f9e22afbf9009.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_8eqdo"]
+load_path = "res://.godot/imported/walk_4.png-3acabd12e1a2d5fd457ed51115e7ee25.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_1r260"]
+load_path = "res://.godot/imported/walk_5.png-f2643fbd4fa128274d4dea0e03992366.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_riopt"]
+load_path = "res://.godot/imported/walk_6.png-0f6aba6c255113f4db0936a819e16bc8.ctex"
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mucck"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_3mv6w")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_ehu3s")
+}],
+"loop": true,
+"name": &"adapt",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_tpc2k")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_svpuv")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_wi71j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_5i64x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_yejys")
+}],
+"loop": true,
+"name": &"charge",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_ehu3s")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_g4b5a")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_c00ts")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_1nvie")
+}],
+"loop": true,
+"name": &"death",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_n668i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_ar228")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_01fg4")
+}],
+"loop": true,
+"name": &"fire",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_gipvu")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_c8m2r")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_6emkg")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_aiw20")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_q24dr")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_dagfb")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_nkuc2")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_8eqdo")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_1r260")
+}, {
+"duration": 1.0,
+"texture": SubResource("CompressedTexture2D_riopt")
+}],
+"loop": true,
+"name": &"run",
+"speed": 9.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(46.125, 52.578125)
+
+[node name="Boss" type="CharacterBody2D"]
+position = Vector2(-13, -11)
+collision_layer = 4
+script = ExtResource("1_boss")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(16.800001, 20.199997)
+scale = Vector2(0.13076924, 0.18289474)
+sprite_frames = SubResource("SpriteFrames_mucck")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.8915232
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(14, 20)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="AttackArea" type="Area2D" parent="."]
+position = Vector2(15, 0)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
+position = Vector2(-1, 20)
+shape = SubResource("RectangleShape2D_body")
+disabled = true

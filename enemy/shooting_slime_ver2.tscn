@@ -90,6 +90,7 @@ animations = [{
 size = Vector2(12, 12)
 
 [node name="shooting_slime" type="Area2D"]
+collision_layer = 4
 collision_mask = 2
 script = ExtResource("1_ta5lo")
 

@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://script/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="CoinLabel" type="Label" parent="."]
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 150.0
+offset_bottom = 24.0
+text = "Coins: 0"
+
+[node name="HPContainer" type="HBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 200.0
+offset_bottom = 44.0

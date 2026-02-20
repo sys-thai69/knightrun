@@ -54,9 +54,8 @@ scale = Vector2(0.13435043, 0.14228721)
 sprite_frames = SubResource("SpriteFrames_3uixn")
 animation = &"new_animation"
 autoplay = "new_animation"
-frame_progress = 0.5574704
 
 [node name="Area2D" parent="." instance=ExtResource("2_tggh8")]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D"]
-polygon = PackedVector2Array(0, -8, -9, 9, 9, 9)
+polygon = PackedVector2Array(0, -9, -2, -9, -10, 9, 10, 9, 2, -9)
