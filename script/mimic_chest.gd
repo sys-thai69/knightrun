@@ -120,6 +120,9 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 func die() -> void:
 	is_dead = true
 	PlayerData.add_coins(COIN_DROP)
+	ScreenEffects.spawn_coin_text(global_position, COIN_DROP)
+	AchievementManager.check_and_unlock("first_kill")
+	AchievementManager.check_coin_achievements()
 	# Drop extra coins as reward for defeating a mimic
 	var tween = create_tween()
 	tween.set_parallel(true)

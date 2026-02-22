@@ -79,8 +79,12 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 	if is_dead:
 		return
 	health -= damage
-	sprite.modulate = Color(1, 0.3, 0.3, 0.8)
-	get_tree().create_timer(0.1).timeout.connect(func(): sprite.modulate = Color.WHITE)
+	# Flash hit color on sprite only (don't override alpha)
+	sprite.modulate = Color(1, 0.3, 0.3)
+	get_tree().create_timer(0.1).timeout.connect(func():
+		if is_instance_valid(self) and sprite:
+			sprite.modulate = Color.WHITE
+	)
 	ScreenEffects.spawn_damage_number(global_position, damage, Color.PURPLE)
 	if health <= 0:
 		die()
@@ -88,6 +92,9 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 func die() -> void:
 	is_dead = true
 	PlayerData.add_coins(COIN_DROP)
+	ScreenEffects.spawn_coin_text(global_position, COIN_DROP)
+	AchievementManager.check_and_unlock("first_kill")
+	AchievementManager.check_coin_achievements()
 	var tween = create_tween()
 	tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
 	tween.tween_property(sprite, "scale", Vector2(1.5, 1.5), 0.5)

@@ -15,6 +15,7 @@ func _on_animated_sprite_2d_animation_finished() -> void:
     animated_sprite_2d.play("idle")
 
 func _ready():
+    add_to_group("enemy")
     # Scale HP with New Game+ level
     health = int(health * PlayerData.get_enemy_hp_multiplier())
     animated_sprite_2d.play("idle")
@@ -46,6 +47,7 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
     if is_dead:
         return
     health -= damage
+    ScreenEffects.spawn_damage_number(global_position, damage, Color.WHITE)
     # White flash on hit
     animated_sprite_2d.modulate = Color(3, 3, 3)
     var flash_tw = create_tween()
@@ -61,6 +63,7 @@ func die() -> void:
     is_dead = true
     fire_timer.stop()
     PlayerData.add_coins(COIN_DROP)
+    ScreenEffects.spawn_coin_text(global_position, COIN_DROP)
     AchievementManager.check_and_unlock("first_kill")
     AchievementManager.check_coin_achievements()
     _spawn_death_particles()

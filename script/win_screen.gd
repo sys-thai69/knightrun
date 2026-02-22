@@ -1,27 +1,36 @@
-# res://ui/win_screen.gd
+# res://script/win_screen.gd
 extends CanvasLayer
+
+@onready var stats_label: Label = $ColorRect/VBoxContainer/StatsLabel
+@onready var timer_label: Label = $ColorRect/VBoxContainer/TimerLabel
 
 func _ready() -> void:
     # Stop time trial if active
     if PlayerData.time_trial_active:
         var elapsed = PlayerData.stop_time_trial()
-        if has_node("TimerLabel"):
-            var mins = int(elapsed) / 60
-            var secs = int(elapsed) % 60
+        if timer_label:
+            @warning_ignore("integer_division")
+            var mins: int = int(elapsed) / 60
+            @warning_ignore("integer_division")
+            var secs: int = int(elapsed) % 60
             var ms = int(fmod(elapsed, 1.0) * 100)
-            $TimerLabel.text = "Time: %02d:%02d.%02d" % [mins, secs, ms]
+            timer_label.text = "Time: %02d:%02d.%02d" % [mins, secs, ms]
             if PlayerData.best_time == elapsed:
-                $TimerLabel.text += " (NEW BEST!)"
+                timer_label.text += " (NEW BEST!)"
+            timer_label.visible = true
+    else:
+        if timer_label:
+            timer_label.visible = false
 
     # Unlock achievements on win
-    PlayerData.unlock_achievement("game_complete")
+    AchievementManager.check_and_unlock("game_complete")
     if PlayerData.death_count == 0:
-        PlayerData.unlock_achievement("deathless")
+        AchievementManager.check_and_unlock("deathless")
     if PlayerData.ng_plus_level > 0:
-        PlayerData.unlock_achievement("ng_plus_complete")
+        AchievementManager.check_and_unlock("ng_plus_complete")
 
     # Show stats
-    if has_node("StatsLabel"):
+    if stats_label:
         var stats_text = "Deaths: %d\nCoins Earned: %d\nSword Lv: %d\nShield Lv: %d" % [
             PlayerData.death_count,
             PlayerData.total_coins_earned,
@@ -31,12 +40,14 @@ func _ready() -> void:
         if PlayerData.ng_plus_level > 0:
             stats_text += "\nNew Game+ Level: %d" % PlayerData.ng_plus_level
         if PlayerData.best_time > 0:
-            var mins = int(PlayerData.best_time) / 60
-            var secs = int(PlayerData.best_time) % 60
+            @warning_ignore("integer_division")
+            var mins: int = int(PlayerData.best_time) / 60
+            @warning_ignore("integer_division")
+            var secs: int = int(PlayerData.best_time) % 60
             stats_text += "\nBest Time: %02d:%02d" % [mins, secs]
         stats_text += "\nScrolls: %d/%d" % [PlayerData.lore_scrolls_found.size(), PlayerData.TOTAL_LORE_SCROLLS]
         stats_text += "\nAchievements: %d" % PlayerData.achievements_unlocked.size()
-        $StatsLabel.text = stats_text
+        stats_label.text = stats_text
     SaveManager.save_game()
 
 func _on_restart_pressed() -> void:

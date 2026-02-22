@@ -49,6 +49,10 @@ var slam_jump_velocity: float = -300.0
 var is_blocking: bool = false
 var block_chance: float = 0.3  # 30% chance to block incoming damage
 
+# --- Hit Effect ---
+var base_sprite_scale: Vector2 = Vector2.ONE
+var pop_tween: Tween = null
+
 # --- Ranged Attack ---
 @export var projectile_scene: PackedScene  # Drag fireball.tscn here in Inspector
 
@@ -57,11 +61,14 @@ var block_chance: float = 0.3  # 30% chance to block incoming damage
 @onready var attack_collision: CollisionShape2D = $AttackArea/CollisionShape2D
 
 func _ready() -> void:
+    add_to_group("enemy")
     # Scale boss HP with NG+ level
     health = int(MAX_HEALTH * PlayerData.get_enemy_hp_multiplier())
     scaled_max_health = health
     if attack_collision:
         attack_collision.disabled = true
+    # Store original sprite scale so hit effects can pop and return correctly
+    base_sprite_scale = sprite.scale
     # Find the player
     await get_tree().process_frame
     var players: Array[Node] = get_tree().get_nodes_in_group("player")
@@ -161,7 +168,10 @@ func _melee_attack() -> void:
     if attack_collision:
         attack_collision.disabled = false
 
-    await sprite.animation_finished
+    # Use timer fallback in case animation_finished doesn't fire
+    var anim_timeout = get_tree().create_timer(0.6)
+    sprite.animation_finished.connect(func(): pass, CONNECT_ONE_SHOT)
+    await anim_timeout.timeout
     if is_dead or not is_instance_valid(self):
         return
 
@@ -205,7 +215,7 @@ func _ranged_attack(dir: int) -> void:
         elif "shoot_direction" in proj:
             proj.shoot_direction = Vector2(dir, 0)
 
-    await sprite.animation_finished
+    await get_tree().create_timer(0.5).timeout
     if is_dead or not is_instance_valid(self):
         return
     is_acting = false
@@ -271,6 +281,7 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
     var resistance: float = melee_resistance if source_type == "melee" else ranged_resistance
     var actual_damage: int = max(1, int(damage * (1.0 - resistance)))
     health -= actual_damage
+    ScreenEffects.spawn_damage_number(global_position, actual_damage, Color.WHITE)
 
     # Track damage by type for adaptation
     if source_type == "melee":
@@ -289,13 +300,18 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
         damage_from_distance = 0
         _adaptation_effect()
 
-    # White flash + scale pop on hit
+    # White flash on hit
     sprite.modulate = Color(3, 3, 3)
     var flash_tw = create_tween()
     flash_tw.tween_property(sprite, "modulate", Color.WHITE, 0.12)
-    var pop_tw = create_tween()
-    pop_tw.tween_property(sprite, "scale", sprite.scale * 1.15, 0.05)
-    pop_tw.tween_property(sprite, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_OUT)
+
+    # Scale pop on hit — kill previous tween to prevent compounding
+    if pop_tween and pop_tween.is_valid():
+        pop_tween.kill()
+        sprite.scale = base_sprite_scale  # Reset before starting new pop
+    pop_tween = create_tween()
+    pop_tween.tween_property(sprite, "scale", base_sprite_scale * 1.15, 0.05)
+    pop_tween.tween_property(sprite, "scale", base_sprite_scale, 0.1).set_ease(Tween.EASE_OUT)
 
     # Phase transitions
     _check_phase()
@@ -338,11 +354,12 @@ func die() -> void:
     ScreenEffects.shake(3.0, 0.2)
     ScreenEffects.hit_freeze(0.06)
     _play("death")
-    # Dramatic death: flash and slow
+    # Wait for death animation to finish, then fade out
+    await get_tree().create_timer(2.0).timeout
+    if not is_instance_valid(self):
+        return
     var tween = create_tween()
-    tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
-    tween.tween_property(sprite, "modulate", Color.RED, 0.1)
-    tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+    tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
     tween.tween_callback(queue_free)
 
 func get_health_percent() -> float:

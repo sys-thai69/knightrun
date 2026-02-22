@@ -5,10 +5,10 @@ func _on_body_entered(body: Node2D) -> void:
         return
 
     if body.has_method("take_damage"):
-        body.take_damage(1)
+        body.take_damage(999)
     else:
         # Fallback: go through proper death pipeline
-        PlayerData.take_damage(1)
+        PlayerData.take_damage(999)
 
 func _on_timer_timeout() -> void:
     Engine.time_scale = 1

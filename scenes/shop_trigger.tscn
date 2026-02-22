@@ -1,0 +1,34 @@
+[gd_scene load_steps=4 format=3 uid="uid://cnkdl6ygad1bp"]
+
+[ext_resource type="Script" uid="uid://jpkkjn02g37h" path="res://script/shop_trigger.gd" id="1_shop_trigger"]
+[ext_resource type="Texture2D" uid="uid://dfm2wo8ekmril" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/shop.png" id="2_ivrq4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shop"]
+size = Vector2(24, 22)
+
+[node name="ShopTrigger" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_shop_trigger")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_shop")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 0.84, 0, 1)
+position = Vector2(0.31249395, -1.5625013)
+scale = Vector2(0.022591151, 0.02454427)
+texture = ExtResource("2_ivrq4")
+
+[node name="InteractLabel" type="Label" parent="."]
+visible = false
+offset_left = -30.0
+offset_top = -30.0
+offset_right = 30.0
+offset_bottom = -15.0
+text = "Press E"
+horizontal_alignment = 1
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]

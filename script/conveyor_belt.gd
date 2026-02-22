@@ -30,7 +30,8 @@ func _draw() -> void:
 func _physics_process(_delta: float) -> void:
 	for body in bodies_on_belt:
 		if is_instance_valid(body) and body.is_on_floor():
-			body.velocity.x += belt_direction * belt_speed * 0.1
+			# Apply strong enough force to be noticeable over player's movement
+			body.velocity.x += belt_direction * belt_speed * _delta * 10.0
 
 func _on_area_body_entered(body: Node2D) -> void:
 	if body is CharacterBody2D and body.is_in_group("player"):

@@ -227,4 +227,6 @@ func stop_time_trial() -> float:
 
 func update_time_trial(delta: float) -> void:
 	if time_trial_active:
-		time_trial_elapsed += delta
+		# Use unscaled delta so slow-motion doesn't affect the timer
+		var real_delta = delta / Engine.time_scale if Engine.time_scale > 0 else delta
+		time_trial_elapsed += real_delta

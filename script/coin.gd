@@ -19,7 +19,7 @@ func _physics_process(delta: float) -> void:
         global_position += dir * MAGNET_SPEED * delta
 
 func _on_body_entered(_body: Node2D) -> void:
-    if being_collected:
+    if being_collected or not _body.is_in_group("player"):
         return
     being_collected = true
     PlayerData.add_coins(1)

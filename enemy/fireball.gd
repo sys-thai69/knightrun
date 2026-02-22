@@ -10,6 +10,7 @@ var direction: Vector2 = Vector2.ZERO:
             animated_sprite_2d.flip_h = direction.x < 0
 
 const SPEED = 100 # Adjust as needed
+var reflected: bool = false
 @onready var timer: Timer = $Timer
 @onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
 @onready var ray_cast_right: RayCast2D = $RayCastRight
@@ -17,6 +18,10 @@ const SPEED = 100 # Adjust as needed
 
 func _ready() -> void:
     add_to_group("projectile")
+    # Safety timeout: destroy after 10 seconds if it somehow misses everything
+    if timer:
+        timer.wait_time = 10.0
+        timer.start()
 
 
 func _physics_process(delta):
@@ -29,24 +34,32 @@ func _physics_process(delta):
 
 
 func _on_body_entered(body: Node2D) -> void:
-    if body.is_in_group("player"):
-        if body.has_method("take_damage"):
-            body.take_damage(1)
-        set_physics_process(false)
-        animated_sprite_2d.visible = false
-        $CollisionShape2D.set_deferred("disabled", true)
-        queue_free()
-    elif body.has_method("take_hit"):
-        # Reflected fireball hitting an enemy
-        body.take_hit(2, "ranged")
-        queue_free()
-    elif body is StaticBody2D:
-        queue_free()
+    if not reflected:
+        if body.is_in_group("player"):
+            # Only consume the fireball if damage was actually applied
+            if body.has_method("take_damage"):
+                # Check if player can actually take damage (not invincible)
+                if body.invincible or body.is_dead:
+                    return  # Pass through — don't destroy fireball
+                body.take_damage(1)
+            set_physics_process(false)
+            animated_sprite_2d.visible = false
+            $CollisionShape2D.set_deferred("disabled", true)
+            queue_free()
+        elif body is StaticBody2D:
+            queue_free()
+    else:
+        if body.has_method("take_hit"):
+            body.take_hit(2, "ranged")
+            queue_free()
+        elif body is StaticBody2D:
+            queue_free()
 
 func _on_timer_timeout() -> void:
     queue_free()  # Despawn after lifetime, don't touch time_scale
 
 func reflect() -> void:
+    reflected = true
     direction = -direction
     if animated_sprite_2d:
         animated_sprite_2d.flip_h = direction.x < 0

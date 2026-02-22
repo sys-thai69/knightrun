@@ -40,44 +40,27 @@ func hit_freeze(duration: float = 0.05) -> void:
 	Engine.time_scale = 0.05
 	freeze_timer = duration
 
+# --- Floating Text ---
+const FloatingTextScript = preload("res://script/floating_text.gd")
+
 func spawn_text_popup(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
-	# Create a floating text popup (for "BLOCK", etc.)
-	var label = Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", 10)
-	label.add_theme_color_override("font_color", color)
-	label.z_index = 100
-	label.global_position = pos - Vector2(10, 20)
-	var scene_root = get_tree().current_scene
-	if scene_root:
-		scene_root.add_child(label)
-	else:
-		return
-	var tween = label.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 30, 0.6)
-	tween.tween_property(label, "modulate:a", 0.0, 0.6)
-	tween.chain().tween_callback(label.queue_free)
+	_create_floating_text(pos, text, color, 7)
 
 func spawn_damage_number(pos: Vector2, damage: int, color: Color = Color.WHITE) -> void:
-	# Create a floating damage number at the given world position
-	var label = Label.new()
-	label.text = str(damage)
-	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", color)
-	label.z_index = 100
-	label.global_position = pos - Vector2(10, 20)
+	_create_floating_text(pos, str(damage), color, 8)
 
-	# We need to add it to the current scene tree
+func spawn_coin_text(pos: Vector2, amount: int) -> void:
+	_create_floating_text(pos, "+" + str(amount), Color.GOLD, 8)
+
+func _create_floating_text(pos: Vector2, text: String, color: Color, size: int) -> void:
 	var scene_root = get_tree().current_scene
-	if scene_root:
-		scene_root.add_child(label)
-	else:
+	if not scene_root:
 		return
-
-	# Animate: float up and fade out
-	var tween = label.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 30, 0.6)
-	tween.tween_property(label, "modulate:a", 0.0, 0.6)
-	tween.chain().tween_callback(label.queue_free)
+	var node = Node2D.new()
+	node.set_script(FloatingTextScript)
+	node.display_text = text
+	node.text_color = color
+	node.font_size = size
+	node.global_position = pos + Vector2(0, -8)
+	node.z_index = 100
+	scene_root.add_child(node)

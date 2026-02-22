@@ -7,9 +7,12 @@ extends StaticBody2D
 
 var current_hits: int = 0
 var is_broken: bool = false
+var _original_position: Vector2 = Vector2.ZERO
 
-@onready var sprite: Sprite2D = $Sprite2D
 @onready var collision: CollisionShape2D = $CollisionShape2D
+
+func _ready() -> void:
+	_original_position = position
 
 # Placeholder visual — remove when real sprites are added
 func _draw() -> void:
@@ -31,14 +34,15 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 	if is_broken:
 		return
 	current_hits += damage
-	# Crack effect
-	var crack_ratio = float(current_hits) / float(hits_to_break)
-	sprite.modulate = Color(1, 1 - crack_ratio * 0.5, 1 - crack_ratio * 0.5)
-	# Shake
+	ScreenEffects.spawn_damage_number(global_position, damage, Color.ORANGE)
+	# Crack color effect via modulate (affects _draw output)
+	var crack_ratio = clampf(float(current_hits) / float(hits_to_break), 0.0, 1.0)
+	modulate = Color(1, 1 - crack_ratio * 0.5, 1 - crack_ratio * 0.5)
+	# Shake using stored original position to prevent drift
 	var tween = create_tween()
-	tween.tween_property(self, "position:x", position.x + 2, 0.03)
-	tween.tween_property(self, "position:x", position.x - 2, 0.03)
-	tween.tween_property(self, "position:x", position.x, 0.03)
+	tween.tween_property(self, "position:x", _original_position.x + 2, 0.03)
+	tween.tween_property(self, "position:x", _original_position.x - 2, 0.03)
+	tween.tween_property(self, "position:x", _original_position.x, 0.03)
 
 	if current_hits >= hits_to_break:
 		_break()
@@ -52,6 +56,6 @@ func _break() -> void:
 	collision.set_deferred("disabled", true)
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.3)
-	tween.tween_property(sprite, "scale", Vector2(1.2, 1.2), 0.1)
+	tween.tween_property(self, "modulate:a", 0.0, 0.3)
+	tween.tween_property(self, "scale", scale * 1.2, 0.15)
 	tween.chain().tween_callback(queue_free)

@@ -54,7 +54,7 @@ func load_game() -> bool:
 		PlayerData.checkpoint_position = Vector2(cx, cy)
 		PlayerData.has_checkpoint = save_data.get("has_checkpoint", false)
 		PlayerData.ng_plus_level = save_data.get("ng_plus_level", 0)
-		PlayerData.achievements_unlocked = save_data.get("achievements_unlocked", [])
+		PlayerData.achievements_unlocked = save_data.get("achievements", [])
 		PlayerData.best_time = save_data.get("best_time", 0.0)
 		PlayerData.lore_scrolls_found = save_data.get("lore_scrolls_found", [])
 		PlayerData.full_heal()

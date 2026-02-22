@@ -84,6 +84,8 @@ func _start_explode() -> void:
 	get_tree().create_timer(EXPLODE_DELAY).timeout.connect(_explode)
 
 func _explode() -> void:
+	if not is_instance_valid(self):
+		return
 	ScreenEffects.shake(6.0, 0.25)
 	# Damage everything in radius
 	# Check player distance
@@ -115,6 +117,9 @@ func take_hit(damage: int, _source_type: String = "melee") -> void:
 		# Killing it prevents explosion
 		is_dead = true
 		PlayerData.add_coins(COIN_DROP)
+		ScreenEffects.spawn_coin_text(global_position, COIN_DROP)
+		AchievementManager.check_and_unlock("first_kill")
+		AchievementManager.check_coin_achievements()
 		var tween = create_tween()
 		tween.set_parallel(true)
 		tween.tween_property(sprite, "modulate:a", 0.0, 0.3)

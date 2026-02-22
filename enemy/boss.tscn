@@ -1,6 +1,7 @@
-[gd_scene load_steps=27 format=3 uid="uid://g35qmmkwwek8"]
+[gd_scene load_steps=28 format=3 uid="uid://g35qmmkwwek8"]
 
 [ext_resource type="Script" uid="uid://das56m45lcuc4" path="res://script/boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" uid="uid://bpldsl1t5cwsc" path="res://enemy/fireball.tscn" id="2_fireball"]
 [ext_resource type="Texture2D" uid="uid://2g63s4wfoh5a" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_0.png" id="5_wi71j"]
 [ext_resource type="Texture2D" uid="uid://dae85e3fpbg2c" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_1.png" id="6_5i64x"]
 [ext_resource type="Texture2D" uid="uid://dhxdh86h0fvbt" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/boss_sprites/block_2.png" id="7_yejys"]
@@ -79,7 +80,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("CompressedTexture2D_svpuv")
 }],
-"loop": true,
+"loop": false,
 "name": &"attack",
 "speed": 4.0
 }, {
@@ -110,7 +111,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("CompressedTexture2D_1nvie")
 }],
-"loop": true,
+"loop": false,
 "name": &"death",
 "speed": 2.0
 }, {
@@ -170,31 +171,36 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(46.125, 52.578125)
+size = Vector2(20, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
+size = Vector2(24, 20)
 
 [node name="Boss" type="CharacterBody2D"]
 position = Vector2(-13, -11)
-collision_layer = 4
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_boss")
+projectile_scene = ExtResource("2_fireball")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(16.800001, 20.199997)
-scale = Vector2(0.13076924, 0.18289474)
+position = Vector2(0, 4)
+scale = Vector2(0.08, 0.08)
 sprite_frames = SubResource("SpriteFrames_mucck")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.8915232
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(14, 20)
+position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="AttackArea" type="Area2D" parent="."]
-position = Vector2(15, 0)
+position = Vector2(12, 0)
 collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
-position = Vector2(-1, 20)
-shape = SubResource("RectangleShape2D_body")
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_attack")
 disabled = true

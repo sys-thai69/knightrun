@@ -11,6 +11,7 @@ func _ready() -> void:
     # Show best time on time trial button
     if has_node("VBoxContainer/TimeTrialBtn"):
         if SaveManager.has_save() and PlayerData.best_time > 0:
+            @warning_ignore("integer_division")
             var mins = int(PlayerData.best_time) / 60
             var secs = int(PlayerData.best_time) % 60
             $VBoxContainer/TimeTrialBtn.text = "Time Trial (Best: %02d:%02d)" % [mins, secs]

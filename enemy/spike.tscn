@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=3 uid="uid://bst5mqmm8dh8l"]
 
 [ext_resource type="Texture2D" uid="uid://d0be6mm2624wc" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/428-4286862_spikes-spikes-pixel-art.png" id="1_7k7bx"]
-[ext_resource type="PackedScene" uid="uid://b33msqckg4y6b" path="res://scences/killzone.tscn" id="2_tggh8"]
+[ext_resource type="Script" uid="uid://d2qy00k627ty7" path="res://script/spike_damage.gd" id="2_spike_dmg"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_5sso0"]
 atlas = ExtResource("1_7k7bx")
@@ -55,7 +55,16 @@ sprite_frames = SubResource("SpriteFrames_3uixn")
 animation = &"new_animation"
 autoplay = "new_animation"
 
-[node name="Area2D" parent="." instance=ExtResource("2_tggh8")]
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+collision_mask = 0
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D"]
-polygon = PackedVector2Array(0, -9, -2, -9, -10, 9, 10, 9, 2, -9)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+polygon = PackedVector2Array(-2, -7, -8, 6, -8, 9, -9, 9, 7, 9, 7, 6, 2, -7)
+
+[node name="DamageArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("2_spike_dmg")
+
+[node name="CollisionShape2D2" type="CollisionPolygon2D" parent="DamageArea"]
+polygon = PackedVector2Array(0, -8, -2, -8, -9, 6, -9, 9, 8, 9, 8, 6, 2, -8)

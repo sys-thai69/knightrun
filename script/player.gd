@@ -58,6 +58,10 @@ const JUMP_BUFFER_TIME = 0.1
 # --- Invincibility Timer ---
 var invincibility_timer: float = 0.0
 
+# --- Ceiling Stick ---
+var ceiling_stick_timer: float = 0.0
+const CEILING_STICK_MAX: float = 0.12  # Max time to cling to ceiling (seconds)
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_collision: CollisionShape2D = $AttackArea/CollisionShape2D
@@ -68,6 +72,21 @@ var invincibility_timer: float = 0.0
 # --- Ladder ---
 var is_on_ladder: bool = false
 var ladder_count: int = 0  # How many ladder areas overlap
+
+# --- Surface Modifiers ---
+var on_ice: bool = false     # Set by IceBlock area
+var on_mud: bool = false     # Set by MudBlock area
+
+# --- Torch ---
+var has_torch: bool = false  # Set by TorchPickup; disables sword
+
+# --- Carry Block ---
+var carried_block: Node2D = null  # Block currently being held
+
+# Surface constants
+const ICE_FRICTION = 5.0     # Very low friction on ice (vs normal get_speed())
+const MUD_SPEED_MULT = 0.5   # Half speed on mud
+const MUD_JUMP_MULT = 0.75   # Weaker jump on mud
 
 func _ready() -> void:
     add_to_group("player")
@@ -92,7 +111,10 @@ func _on_sprite_animation_finished() -> void:
         attack_hit_targets.clear()
 
 func get_speed() -> float:
-    return BASE_SPEED + PlayerData.get_speed_bonus()
+    var spd = BASE_SPEED + PlayerData.get_speed_bonus()
+    if on_mud:
+        spd *= MUD_SPEED_MULT
+    return spd
 
 func _physics_process(delta: float) -> void:
     # ---- Time Trial ----
@@ -132,7 +154,23 @@ func _physics_process(delta: float) -> void:
 
     # Gravity (not during ground pound or ladder — it has its own)
     if not is_on_floor() and not is_ground_pounding and not is_on_ladder:
-        velocity += get_gravity() * delta
+        # Ceiling stick: when jumping upward and hitting a ceiling, briefly hold
+        if ceiling_stick_timer > 0:
+            ceiling_stick_timer -= delta
+            velocity.y = 0
+        else:
+            velocity += get_gravity() * delta
+
+    # Detect ceiling hit and start stick
+    if is_on_ceiling() and velocity.y <= 0 and ceiling_stick_timer <= 0 and not is_on_ladder:
+        # Stick duration proportional to remaining upward momentum
+        var momentum_ratio = clamp(abs(velocity.y) / abs(JUMP_VELOCITY), 0.0, 1.0)
+        ceiling_stick_timer = momentum_ratio * CEILING_STICK_MAX
+        velocity.y = 0
+
+    # Reset ceiling stick when on floor
+    if is_on_floor():
+        ceiling_stick_timer = 0
 
     # --- Ladder Climbing ---
     if is_on_ladder:
@@ -148,7 +186,7 @@ func _physics_process(delta: float) -> void:
                 sprite.play("idle")
         move_and_slide()
         # Jump off ladder
-        if Input.is_action_just_pressed("jump") and vert >= 0:
+        if Input.is_action_just_pressed("jump"):
             is_on_ladder = false
             ladder_count = 0  # Force exit
             velocity.y = JUMP_VELOCITY
@@ -211,12 +249,19 @@ func _physics_process(delta: float) -> void:
         velocity = Vector2.ZERO
         return
 
+    # --- Interact / Carry Block (E key) ---
+    if Input.is_action_just_pressed("interact"):
+        if carried_block:
+            _drop_block()
+        else:
+            _try_pick_up_block()
+
     # --- Ranged Attack (L key) ---
-    if Input.is_action_just_pressed("ranged_attack") and PlayerData.has_ranged and ranged_cooldown <= 0 and not is_attacking and not is_blocking:
+    if Input.is_action_just_pressed("ranged_attack") and PlayerData.has_ranged and ranged_cooldown <= 0 and not is_attacking and not is_blocking and not has_torch:
         _ranged_attack()
 
     # --- Charged Attack (hold J) ---
-    if Input.is_action_pressed("attack") and not is_blocking and not is_attacking and PlayerData.has_sword:
+    if Input.is_action_pressed("attack") and not is_blocking and not is_attacking and PlayerData.has_sword and not has_torch:
         if not is_charging:
             is_charging = true
             charge_time = 0.0
@@ -235,7 +280,7 @@ func _physics_process(delta: float) -> void:
         sprite.modulate = Color.WHITE
 
     # --- Instant tap attack (J pressed, fires immediately if not already attacking) ---
-    if Input.is_action_just_pressed("attack") and not is_attacking and not is_blocking and PlayerData.has_sword:
+    if Input.is_action_just_pressed("attack") and not is_attacking and not is_blocking and PlayerData.has_sword and not has_torch:
         # Start charging, but also do instant attack on super-fast taps via release above
         pass
 
@@ -271,7 +316,7 @@ func _physics_process(delta: float) -> void:
                 sfx_jump.play()
             sprite.play("jump")
         elif coyote_timer > 0 or jump_count < MAX_JUMPS:
-            velocity.y = JUMP_VELOCITY
+            velocity.y = JUMP_VELOCITY * (MUD_JUMP_MULT if on_mud else 1.0)
             jump_count += 1
             coyote_timer = 0
             jump_buffer = 0
@@ -289,7 +334,11 @@ func _physics_process(delta: float) -> void:
         direction = 0  # Can't move while blocking
 
     if direction:
-        velocity.x = direction * get_speed()
+        if on_ice:
+            # On ice: accelerate toward target speed with low friction (slide)
+            velocity.x = move_toward(velocity.x, direction * get_speed(), ICE_FRICTION)
+        else:
+            velocity.x = direction * get_speed()
         if direction > 0:
             sprite.flip_h = false
             attack_area.position.x = 10
@@ -299,7 +348,10 @@ func _physics_process(delta: float) -> void:
             attack_area.position.x = -10
             attack_area.scale.x = -1
     else:
-        velocity.x = move_toward(velocity.x, 0, get_speed())
+        if on_ice:
+            velocity.x = move_toward(velocity.x, 0, ICE_FRICTION)
+        else:
+            velocity.x = move_toward(velocity.x, 0, get_speed())
 
     # --- Animation ---
     if not is_attacking:
@@ -360,6 +412,29 @@ func _ranged_attack() -> void:
     if sfx_attack:
         sfx_attack.play()
 
+# --- CARRY BLOCK ---
+
+func _try_pick_up_block() -> void:
+    # Find the nearest carriable block within pickup range
+    var best: Node2D = null
+    var best_dist: float = 30.0  # Max pickup range
+    for node in get_tree().get_nodes_in_group("carriable"):
+        if not is_instance_valid(node) or node.is_carried:
+            continue
+        var d = global_position.distance_to(node.global_position)
+        if d < best_dist:
+            best_dist = d
+            best = node
+    if best and best.has_method("pick_up"):
+        carried_block = best
+        best.pick_up(self)
+
+func _drop_block() -> void:
+    if carried_block and is_instance_valid(carried_block):
+        var dir = -1 if sprite.flip_h else 1
+        carried_block.drop(dir)
+    carried_block = null
+
 # Signal-based hit detection: fires whenever something enters the attack area during a swing
 func _on_attack_area_body_entered(body: Node2D) -> void:
     if not is_attacking or body == self:
@@ -369,7 +444,6 @@ func _on_attack_area_body_entered(body: Node2D) -> void:
     if body.has_method("take_hit"):
         attack_hit_targets.append(body)
         body.take_hit(attack_damage, attack_source)
-        ScreenEffects.spawn_damage_number(body.global_position, attack_damage, Color.WHITE)
 
 func _on_attack_area_area_entered(area: Area2D) -> void:
     if not is_attacking:
@@ -382,7 +456,6 @@ func _on_attack_area_area_entered(area: Area2D) -> void:
     if target.has_method("take_hit"):
         attack_hit_targets.append(target)
         target.take_hit(attack_damage, attack_source)
-        ScreenEffects.spawn_damage_number(target.global_position, attack_damage, Color.WHITE)
 
 func _ground_pound_impact() -> void:
     is_ground_pounding = false
@@ -392,19 +465,20 @@ func _ground_pound_impact() -> void:
     # Force physics update so overlapping bodies are detected
     attack_area.force_update_transform()
     await get_tree().physics_frame
-    # Damage nearby enemies
+    # Damage nearby enemies (deduplicate to prevent double-hits)
     var damage = PlayerData.get_attack_damage()
+    var hit_targets: Array = []
     for body in attack_area.get_overlapping_bodies():
-        if body != self and body.has_method("take_hit"):
+        if body != self and body.has_method("take_hit") and body not in hit_targets:
+            hit_targets.append(body)
             body.take_hit(damage, "melee")
-            ScreenEffects.spawn_damage_number(body.global_position, damage, Color.ORANGE)
     for area in attack_area.get_overlapping_areas():
         var target = area
         if not area.has_method("take_hit") and area.get_parent() and area.get_parent().has_method("take_hit"):
             target = area.get_parent()
-        if target.has_method("take_hit"):
+        if target.has_method("take_hit") and target not in hit_targets:
+            hit_targets.append(target)
             target.take_hit(damage, "melee")
-            ScreenEffects.spawn_damage_number(target.global_position, damage, Color.ORANGE)
     attack_collision.disabled = true
     # Check for crumbling platforms below
     var space = get_world_2d().direct_space_state
@@ -560,14 +634,26 @@ func _on_player_died() -> void:
     is_blocking = false
     is_dashing = false
     is_ground_pounding = false
+    # Drop any carried block
+    if carried_block and is_instance_valid(carried_block):
+        _drop_block()
     attack_collision.set_deferred("disabled", true)
     sprite.modulate = Color.WHITE
+    # Clear any active hit-freeze so death slow-mo isn't overridden
+    ScreenEffects.freeze_timer = 0.0
     Engine.time_scale = 0.5
     velocity.y = -200
     set_collision_mask_value(1, false)
     set_collision_layer_value(1, false)
     sprite.play("jump")
-    get_tree().create_timer(1.0, true, false, true).timeout.connect(_on_death_timer)
+    # Use a node-owned timer so it gets freed with the player
+    var death_timer = Timer.new()
+    death_timer.wait_time = 1.0
+    death_timer.one_shot = true
+    death_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+    add_child(death_timer)
+    death_timer.timeout.connect(_on_death_timer)
+    death_timer.start()
 
 func _on_death_timer() -> void:
     Engine.time_scale = 1

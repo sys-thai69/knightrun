@@ -25,11 +25,13 @@ func _process(_delta: float) -> void:
     if PlayerData.time_trial_active and timer_label:
         timer_label.visible = true
         var t = PlayerData.time_trial_elapsed
-        var mins = int(t) / 60
-        var secs = int(t) % 60
-        var ms = int(fmod(t, 1.0) * 100)
+        @warning_ignore("integer_division")
+        var mins: int = int(t) / 60
+        var secs: int = int(t) % 60
+        var ms: int = int(fmod(t, 1.0) * 100)
         timer_label.text = "%02d:%02d.%02d" % [mins, secs, ms]
         if PlayerData.best_time > 0:
+            @warning_ignore("integer_division")
             timer_label.text += "  Best: %02d:%02d" % [int(PlayerData.best_time) / 60, int(PlayerData.best_time) % 60]
     elif timer_label:
         timer_label.visible = false
@@ -65,3 +67,4 @@ func _rebuild_hearts() -> void:
             heart.text = "♡"
             heart.add_theme_color_override("font_color", Color.DARK_RED)
         hp_container.add_child(heart)
+        heart_nodes.append(heart)

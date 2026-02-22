@@ -16,7 +16,7 @@ func set_boss(boss: Node) -> void:
 	visible = true
 
 func _process(_delta: float) -> void:
-	if boss_ref and not boss_ref.is_dead:
+	if boss_ref and is_instance_valid(boss_ref) and not boss_ref.is_dead:
 		progress_bar.value = boss_ref.health
-	elif boss_ref and boss_ref.is_dead:
+	elif boss_ref and (not is_instance_valid(boss_ref) or boss_ref.is_dead):
 		visible = false

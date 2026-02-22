@@ -37,6 +37,12 @@ size_flags_vertical = 3
 theme_override_font_sizes/font_size = 33
 text = "RESUME"
 
+[node name="RESPAWN" type="Button" parent="ColorRect/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 33
+text = "RESPAWN"
+
 [node name="RESTART" type="Button" parent="ColorRect/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -50,5 +56,6 @@ theme_override_font_sizes/font_size = 32
 text = "EXIT"
 
 [connection signal="pressed" from="ColorRect/VBoxContainer/RESUME" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="ColorRect/VBoxContainer/RESPAWN" to="." method="_on_respawn_pressed"]
 [connection signal="pressed" from="ColorRect/VBoxContainer/RESTART" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="ColorRect/VBoxContainer/EXIT" to="." method="_on_exit_pressed"]
