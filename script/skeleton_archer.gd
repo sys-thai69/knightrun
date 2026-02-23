@@ -33,14 +33,6 @@ func _ready() -> void:
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.get_animation_names().size() > 0:
 		sprite.play("idle")
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	# Bone-white skeleton body
-	draw_rect(Rect2(-6, -10, 12, 20), Color(0.83, 0.77, 0.66))
-	# Bow
-	draw_rect(Rect2(7, -8, 3, 16), Color(0.55, 0.27, 0.07))
-	draw_rect(Rect2(-6, -10, 12, 20), Color.BLACK, false, 1.0)
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return

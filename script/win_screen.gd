@@ -1,8 +1,8 @@
 # res://script/win_screen.gd
 extends CanvasLayer
 
-@onready var stats_label: Label = $ColorRect/VBoxContainer/StatsLabel
-@onready var timer_label: Label = $ColorRect/VBoxContainer/TimerLabel
+@onready var stats_label: Label = $ColorRect/Panel/VBoxContainer/StatsLabel
+@onready var timer_label: Label = $ColorRect/Panel/VBoxContainer/TimerLabel
 
 func _ready() -> void:
     # Stop time trial if active
@@ -14,7 +14,7 @@ func _ready() -> void:
             @warning_ignore("integer_division")
             var secs: int = int(elapsed) % 60
             var ms = int(fmod(elapsed, 1.0) * 100)
-            timer_label.text = "Time: %02d:%02d.%02d" % [mins, secs, ms]
+            timer_label.text = "⏱ Time: %02d:%02d.%02d" % [mins, secs, ms]
             if PlayerData.best_time == elapsed:
                 timer_label.text += " (NEW BEST!)"
             timer_label.visible = true
@@ -31,22 +31,22 @@ func _ready() -> void:
 
     # Show stats
     if stats_label:
-        var stats_text = "Deaths: %d\nCoins Earned: %d\nSword Lv: %d\nShield Lv: %d" % [
+        var stats_text = "💀 Deaths: %d\n💰 Coins Earned: %d\n⚔ Sword Lv: %d\n🛡 Shield Lv: %d" % [
             PlayerData.death_count,
             PlayerData.total_coins_earned,
             PlayerData.sword_level,
             PlayerData.shield_level
         ]
         if PlayerData.ng_plus_level > 0:
-            stats_text += "\nNew Game+ Level: %d" % PlayerData.ng_plus_level
+            stats_text += "\n⭐ New Game+ Level: %d" % PlayerData.ng_plus_level
         if PlayerData.best_time > 0:
             @warning_ignore("integer_division")
             var mins: int = int(PlayerData.best_time) / 60
             @warning_ignore("integer_division")
             var secs: int = int(PlayerData.best_time) % 60
-            stats_text += "\nBest Time: %02d:%02d" % [mins, secs]
-        stats_text += "\nScrolls: %d/%d" % [PlayerData.lore_scrolls_found.size(), PlayerData.TOTAL_LORE_SCROLLS]
-        stats_text += "\nAchievements: %d" % PlayerData.achievements_unlocked.size()
+            stats_text += "\n⏱ Best Time: %02d:%02d" % [mins, secs]
+        stats_text += "\n📜 Scrolls: %d/%d" % [PlayerData.lore_scrolls_found.size(), PlayerData.TOTAL_LORE_SCROLLS]
+        stats_text += "\n🏆 Achievements: %d" % PlayerData.achievements_unlocked.size()
         stats_label.text = stats_text
     SaveManager.save_game()
 

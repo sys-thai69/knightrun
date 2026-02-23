@@ -37,15 +37,6 @@ func _ready() -> void:
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.get_animation_names().size() > 0:
 		sprite.play("fly")
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	# Purple bat body
-	draw_rect(Rect2(-8, -8, 16, 16), Color(0.6, 0.15, 0.9))
-	# Wings
-	draw_rect(Rect2(-14, -4, 6, 8), Color(0.5, 0.1, 0.8))
-	draw_rect(Rect2(8, -4, 6, 8), Color(0.5, 0.1, 0.8))
-	draw_rect(Rect2(-14, -8, 28, 16), Color.BLACK, false, 1.0)
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return

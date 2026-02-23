@@ -1,8 +1,17 @@
 extends Area2D
 
-const MAGNET_RANGE = 40.0
+const MAGNET_RANGE = 20.0  # Reduced from 40
 const MAGNET_SPEED = 120.0
 var being_collected: bool = false
+var coin_id: String = ""
+
+func _ready() -> void:
+    # Generate unique ID based on position
+    coin_id = "coin_%d_%d" % [int(global_position.x), int(global_position.y)]
+    # Check if already collected
+    if PlayerData.collected_coins.has(coin_id):
+        queue_free()
+        return
 
 func _physics_process(delta: float) -> void:
     if being_collected:
@@ -22,6 +31,9 @@ func _on_body_entered(_body: Node2D) -> void:
     if being_collected or not _body.is_in_group("player"):
         return
     being_collected = true
+    # Mark as collected permanently
+    if coin_id != "" and not PlayerData.collected_coins.has(coin_id):
+        PlayerData.collected_coins.append(coin_id)
     PlayerData.add_coins(1)
     # Collect effect: pop and fade
     var tween = create_tween()

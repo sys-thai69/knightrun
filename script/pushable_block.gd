@@ -3,16 +3,43 @@
 extends CharacterBody2D
 
 const GRAVITY_VAL = 600.0
+const PICKUP_RANGE = 30.0
 var is_carried: bool = false
+var player_nearby: bool = false
+var player_ref: CharacterBody2D = null
+var prompt_label: Label = null
 
 func _ready() -> void:
 	add_to_group("pushable")
 	add_to_group("carriable")
+	
+	# Create the "Press E" prompt label
+	prompt_label = Label.new()
+	prompt_label.text = "Press E"
+	prompt_label.add_theme_font_size_override("font_size", 10)
+	prompt_label.add_theme_color_override("font_color", Color.YELLOW)
+	prompt_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	prompt_label.add_theme_constant_override("outline_size", 2)
+	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_label.position = Vector2(-20, -28)
+	prompt_label.visible = false
+	add_child(prompt_label)
+	
+	# Find player
+	_find_player.call_deferred()
+
+func _find_player() -> void:
+	await get_tree().process_frame
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		player_ref = players[0]
 
 func _physics_process(delta: float) -> void:
 	if is_carried:
 		# While carried, the player controls our position
+		prompt_label.visible = false
 		return
+	
 	# Apply gravity when not carried
 	if not is_on_floor():
 		velocity.y += GRAVITY_VAL * delta
@@ -20,9 +47,19 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0
 	velocity.x = move_toward(velocity.x, 0, 200 * delta)
 	move_and_slide()
+	
+	# Check if player is nearby to show prompt
+	if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
+		var dist = global_position.distance_to(player_ref.global_position)
+		player_nearby = dist < PICKUP_RANGE
+		prompt_label.visible = player_nearby
+	else:
+		player_nearby = false
+		prompt_label.visible = false
 
 func pick_up(carrier: Node2D) -> void:
 	is_carried = true
+	prompt_label.visible = false
 	# Disable collision so it doesn't push the player
 	set_collision_layer_value(1, false)
 	set_collision_layer_value(2, false)
@@ -36,6 +73,7 @@ func pick_up(carrier: Node2D) -> void:
 
 func drop(drop_dir: int) -> void:
 	is_carried = false
+	prompt_label.visible = false
 	var global_pos = global_position
 	var old_parent = get_parent()
 	old_parent.remove_child(self)
@@ -49,6 +87,8 @@ func drop(drop_dir: int) -> void:
 	# Restore collision
 	set_collision_layer_value(1, true)
 	set_collision_mask_value(1, true)
+	# Re-find player reference after reparenting
+	_find_player.call_deferred()
 	queue_redraw()
 
 # Placeholder visual

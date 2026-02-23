@@ -118,3 +118,7 @@ func _spawn_death_particles() -> void:
         tw.tween_property(p, "position", p.position + Vector2(randf_range(-20, 20), randf_range(-30, -10)), 0.4)
         tw.tween_property(p, "modulate:a", 0.0, 0.4)
         tw.chain().tween_callback(p.queue_free)
+
+func _on_hurt_area_body_entered(body: Node2D) -> void:
+    if body.is_in_group("player") and body.has_method("take_damage"):
+        body.take_damage(1)

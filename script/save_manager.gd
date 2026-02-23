@@ -23,6 +23,7 @@ func save_game() -> void:
 		"achievements": PlayerData.achievements_unlocked,
 		"best_time": PlayerData.best_time,
 		"lore_scrolls_found": PlayerData.lore_scrolls_found,
+		"collected_coins": PlayerData.collected_coins,
 	}
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -57,6 +58,7 @@ func load_game() -> bool:
 		PlayerData.achievements_unlocked = save_data.get("achievements", [])
 		PlayerData.best_time = save_data.get("best_time", 0.0)
 		PlayerData.lore_scrolls_found = save_data.get("lore_scrolls_found", [])
+		PlayerData.collected_coins = save_data.get("collected_coins", [])
 		PlayerData.full_heal()
 		PlayerData.coins_changed.emit(PlayerData.coins)
 		return true

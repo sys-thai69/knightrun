@@ -41,7 +41,7 @@ func close_gate() -> void:
     _is_open = false
     if _open_tween:
         _open_tween.kill()
-    # Before closing, push any bodies out of the gate's closed position
+    # Push any bodies out of the gate's closed position (synchronous)
     _push_bodies_out()
     # Disable collision during closing animation, re-enable when done
     collision.set_deferred("disabled", true)
@@ -50,9 +50,9 @@ func close_gate() -> void:
     _open_tween.tween_callback(func(): collision.set_deferred("disabled", false))
 
 func _push_bodies_out() -> void:
-    # Force update the area to detect any bodies at the closed position
-    _crush_area.force_update_transform()
-    await get_tree().physics_frame
+    # Move crush area to the closed position to check for bodies there
+    _crush_area.global_position = Vector2(global_position.x, _closed_y)
+    # Check overlapping bodies at the closed position
     for body in _crush_area.get_overlapping_bodies():
         if body is CharacterBody2D:
             # Push body to the nearest side of the gate

@@ -46,18 +46,21 @@ var time_trial_elapsed: float = 0.0
 var lore_scrolls_found: Array = []  # Array of scroll IDs
 const TOTAL_LORE_SCROLLS = 5
 
+# --- Collected Coins (persists across deaths until game restart) ---
+var collected_coins: Array = []  # Array of coin IDs (position-based)
+
 # --- Upgrade Costs ---
 const UPGRADE_COSTS = {
-	"sword": [5, 10, 20],
-	"shield": [5, 10, 20],
-	"health": [8, 15, 25],
-	"speed": [5, 10, 15],
+	"sword": [3, 5, 10],
+	"shield": [3, 5, 10],
+	"health": [4, 8, 12],
+	"speed": [3, 5, 8],
 }
 const MAX_UPGRADE_LEVEL = 3
-const SWORD_COST = 8
-const SHIELD_COST = 8
-const RANGED_COST = 12
-const DASH_COST = 10
+const SWORD_COST = 4
+const SHIELD_COST = 4
+const RANGED_COST = 6
+const DASH_COST = 5
 
 # --- Derived Stats ---
 func get_attack_damage() -> int:
@@ -162,6 +165,7 @@ func reset_all() -> void:
 	time_trial_active = false
 	time_trial_elapsed = 0.0
 	lore_scrolls_found = []
+	collected_coins = []  # Reset collected coins on full reset
 	has_checkpoint = false
 	checkpoint_position = Vector2.ZERO
 	max_health = 3

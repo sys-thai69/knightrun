@@ -34,20 +34,6 @@ func _ready() -> void:
 	if players.size() > 0:
 		player_ref = players[0]
 
-# Placeholder visual
-func _draw() -> void:
-	# Dark spider body
-	draw_circle(Vector2(0, 0), 6.0, Color(0.25, 0.15, 0.1))
-	# Legs
-	for i in range(-2, 3):
-		if i == 0:
-			continue
-		draw_line(Vector2(i * 3, 0), Vector2(i * 5, 5), Color(0.2, 0.1, 0.05), 1.0)
-		draw_line(Vector2(i * 3, 0), Vector2(i * 5, -5), Color(0.2, 0.1, 0.05), 1.0)
-	# Eyes
-	draw_circle(Vector2(-2, -2), 1.0, Color(1.0, 0.2, 0.2))
-	draw_circle(Vector2(2, -2), 1.0, Color(1.0, 0.2, 0.2))
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return

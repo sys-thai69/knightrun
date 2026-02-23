@@ -34,6 +34,7 @@ var attack_cooldown: float = 2.0
 var attack_timer: float = 0.0
 var player_ref: CharacterBody2D = null
 var gravity: float = 800.0
+var combo_count: int = 0  # Track combo hits in phase 3
 
 # --- Charge Attack (Phase 2+) ---
 var is_charging: bool = false
@@ -44,6 +45,7 @@ var charge_timer: float = 0.0
 # --- Slam Attack (Phase 3) ---
 var is_slamming: bool = false
 var slam_jump_velocity: float = -300.0
+const SLAM_DAMAGE_RADIUS: float = 80.0  # Shockwave radius
 
 # --- Block ---
 var is_blocking: bool = false
@@ -52,6 +54,9 @@ var block_chance: float = 0.3  # 30% chance to block incoming damage
 # --- Hit Effect ---
 var base_sprite_scale: Vector2 = Vector2.ONE
 var pop_tween: Tween = null
+
+# --- Attack Telegraphing ---
+var telegraph_tween: Tween = null
 
 # --- Ranged Attack ---
 @export var projectile_scene: PackedScene  # Drag fireball.tscn here in Inspector
@@ -145,9 +150,17 @@ func _physics_process(delta: float) -> void:
         elif phase >= 2 and dist > 150 and attack_timer <= 0:
             _ranged_attack(dir_to_player)
         elif phase >= 2 and dist > 60 and dist < 150 and attack_timer <= 0:
-            _charge_attack(dir_to_player)
-        elif phase >= 3 and dist > 40 and attack_timer <= 0 and is_on_floor():
-            _slam_attack()
+            # Phase 2+: Random choice between charge and ranged
+            if randf() < 0.6:
+                _charge_attack(dir_to_player)
+            else:
+                _ranged_attack(dir_to_player)
+        elif phase >= 3 and dist > 40 and dist < 120 and attack_timer <= 0 and is_on_floor():
+            # Phase 3: Slam or combo attack
+            if randf() < 0.4:
+                _slam_attack()
+            else:
+                _combo_attack(dir_to_player)
         else:
             # Walk toward player
             velocity.x = dir_to_player * current_speed
@@ -164,6 +177,13 @@ func _melee_attack() -> void:
     is_acting = true
     velocity.x = 0
     attack_timer = attack_cooldown
+    
+    # Telegraph attack with color flash
+    _telegraph_attack()
+    await get_tree().create_timer(0.15).timeout
+    if is_dead or not is_instance_valid(self):
+        return
+    
     _play("attack")
 
     if attack_collision:
@@ -187,12 +207,63 @@ func _melee_attack() -> void:
     is_acting = false
     _play("idle")
 
+func _combo_attack(dir: int) -> void:
+    # Phase 3 combo: charge into melee
+    is_acting = true
+    direction = dir
+    attack_timer = attack_cooldown * 0.8
+    
+    # First: short dash
+    _telegraph_attack()
+    await get_tree().create_timer(0.1).timeout
+    if is_dead or not is_instance_valid(self):
+        return
+    
+    _play("charge")
+    var dash_time: float = 0.25
+    var dash_speed: float = 150.0
+    var elapsed: float = 0.0
+    while elapsed < dash_time:
+        velocity.x = direction * dash_speed
+        await get_tree().process_frame
+        if is_dead or not is_instance_valid(self):
+            return
+        elapsed += get_physics_process_delta_time()
+    
+    velocity.x = 0
+    
+    # Second: immediate melee swing
+    if attack_collision:
+        attack_collision.disabled = false
+    _play("attack")
+    await get_tree().create_timer(0.4).timeout
+    if is_dead or not is_instance_valid(self):
+        return
+    
+    if attack_area:
+        for body in attack_area.get_overlapping_bodies():
+            if body.is_in_group("player") and body.has_method("take_damage"):
+                body.take_damage(2)  # Combo does more damage
+    
+    if attack_collision:
+        attack_collision.disabled = true
+    is_acting = false
+    _play("idle")
+
 func _charge_attack(dir: int) -> void:
     is_acting = true
-    is_charging = true
     direction = dir
-    charge_timer = charge_duration
     attack_timer = attack_cooldown * 1.5
+    
+    # Telegraph the charge
+    _telegraph_attack()
+    velocity.x = 0
+    await get_tree().create_timer(0.2).timeout
+    if is_dead or not is_instance_valid(self):
+        return
+    
+    is_charging = true
+    charge_timer = charge_duration
     _play("charge")
 
 func _ranged_attack(dir: int) -> void:
@@ -224,26 +295,63 @@ func _ranged_attack(dir: int) -> void:
 
 func _slam_attack() -> void:
     is_acting = true
+    attack_timer = attack_cooldown * 2.0
+    
+    # Telegraph before jumping
+    _telegraph_attack()
+    await get_tree().create_timer(0.25).timeout
+    if is_dead or not is_instance_valid(self):
+        return
+    
     is_slamming = true
     velocity.y = slam_jump_velocity
-    attack_timer = attack_cooldown * 2.0
     # Future: play "plunge" animation here when added
     # _play("plunge")
 
 func _slam_impact() -> void:
     is_acting = false
-    if attack_collision:
-        attack_collision.disabled = false
-    if attack_area:
-        for body in attack_area.get_overlapping_bodies():
-            if body.is_in_group("player") and body.has_method("take_damage"):
-                body.take_damage(2)
-    await get_tree().create_timer(0.2).timeout
+    ScreenEffects.shake(2.0, 0.15)
+    
+    # Shockwave effect - damage all players in radius
+    var slam_pos = global_position
+    var players = get_tree().get_nodes_in_group("player")
+    for p in players:
+        if p.has_method("take_damage") and not p.is_dead:
+            var dist_to_player = slam_pos.distance_to(p.global_position)
+            if dist_to_player <= SLAM_DAMAGE_RADIUS:
+                p.take_damage(2)
+    
+    # Visual shockwave indicator
+    _spawn_shockwave()
+    
+    await get_tree().create_timer(0.3).timeout
     if is_dead or not is_instance_valid(self):
         return
-    if attack_collision:
-        attack_collision.disabled = true
     _play("idle")
+
+func _spawn_shockwave() -> void:
+    # Create a visual ring effect for the shockwave
+    var ring = Sprite2D.new()
+    ring.modulate = Color(1, 0.3, 0.3, 0.8)
+    ring.scale = Vector2(0.1, 0.1)
+    ring.global_position = global_position
+    ring.z_index = -1
+    
+    # Use a white texture as a circle placeholder
+    var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+    for x in range(64):
+        for y in range(64):
+            var dist = Vector2(x - 32, y - 32).length()
+            if dist >= 28 and dist <= 32:
+                img.set_pixel(x, y, Color.WHITE)
+    var tex = ImageTexture.create_from_image(img)
+    ring.texture = tex
+    get_parent().add_child(ring)
+    
+    var tween = create_tween()
+    tween.tween_property(ring, "scale", Vector2(3.0, 3.0), 0.3)
+    tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.3)
+    tween.tween_callback(ring.queue_free)
 
 # --- BLOCK ---
 
@@ -326,12 +434,13 @@ func _check_phase() -> void:
         phase = 3
         current_speed = SPEED_PHASE3
         attack_cooldown = 1.0
-        _phase_transition_effect()
+        block_chance = 0.4  # More defensive in final phase
+        _phase_transition_effect(3)
     elif hp_percent <= 0.6 and phase < 2:
         phase = 2
         current_speed = SPEED_PHASE2
         attack_cooldown = 1.5
-        _phase_transition_effect()
+        _phase_transition_effect(2)
 
 func _adaptation_effect() -> void:
     _play("adapt")
@@ -342,10 +451,22 @@ func _adaptation_effect() -> void:
     tween.tween_property(sprite, "modulate", Color(0, 1, 1), 0.15)
     tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
 
-func _phase_transition_effect() -> void:
-    var tween: Tween = create_tween().set_loops(3)
-    tween.tween_property(sprite, "modulate", Color(1, 0, 0), 0.1)
+func _phase_transition_effect(new_phase: int) -> void:
+    # Dramatic phase transition
+    ScreenEffects.shake(1.5, 0.2)
+    ScreenEffects.hit_freeze(0.08)
+    
+    # Color based on phase
+    var phase_color: Color = Color.ORANGE if new_phase == 2 else Color.RED
+    
+    var tween: Tween = create_tween().set_loops(4)
+    tween.tween_property(sprite, "modulate", phase_color, 0.1)
     tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+    
+    # Scale pulse
+    var scale_tween = create_tween()
+    scale_tween.tween_property(sprite, "scale", base_sprite_scale * 1.3, 0.15)
+    scale_tween.tween_property(sprite, "scale", base_sprite_scale, 0.2).set_ease(Tween.EASE_OUT)
 
 func die() -> void:
     is_dead = true
@@ -374,3 +495,11 @@ func _play(anim_name: String) -> void:
     else:
         # Fallback: if animation doesn't exist yet, don't crash
         pass
+
+# --- HELPER: telegraph attack with visual warning ---
+func _telegraph_attack() -> void:
+    if telegraph_tween and telegraph_tween.is_valid():
+        telegraph_tween.kill()
+    telegraph_tween = create_tween()
+    telegraph_tween.tween_property(sprite, "modulate", Color(1.5, 0.5, 0.5), 0.08)
+    telegraph_tween.tween_property(sprite, "modulate", Color.WHITE, 0.08)

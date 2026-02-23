@@ -1,6 +1,18 @@
-[gd_scene load_steps=2 format=3 uid="uid://dms0s7esxb355"]
+[gd_scene load_steps=3 format=3 uid="uid://dms0s7esxb355"]
 
 [ext_resource type="Script" uid="uid://bh2ugteauwlgm" path="res://script/canvas_layer.gd" id="1_jfcen"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
+bg_color = Color(0.1, 0.08, 0.15, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6, 0.4, 0.8, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="menu" type="CanvasLayer"]
 layer = 10
@@ -14,48 +26,76 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-color = Color(0, 0, 0, 0.49803922)
+color = Color(0, 0, 0, 0.6)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ColorRect"]
+[node name="Panel" type="Panel" parent="ColorRect"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -171.375
-offset_top = -108.75
-offset_right = 171.375
-offset_bottom = 108.75
+offset_left = -150.0
+offset_top = -160.0
+offset_right = 150.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ColorRect/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="RESUME" type="Button" parent="ColorRect/VBoxContainer"]
+[node name="Title" type="Label" parent="ColorRect/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "⚔ PAUSED ⚔"
+
+[node name="Spacer" type="Control" parent="ColorRect/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="RESUME" type="Button" parent="ColorRect/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 33
-text = "RESUME"
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 24
+text = "▶ RESUME"
 
-[node name="RESPAWN" type="Button" parent="ColorRect/VBoxContainer"]
+[node name="RESPAWN" type="Button" parent="ColorRect/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 33
-text = "RESPAWN"
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 24
+text = "🔄 RESPAWN"
 
-[node name="RESTART" type="Button" parent="ColorRect/VBoxContainer"]
+[node name="RESTART" type="Button" parent="ColorRect/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 33
-text = "RESTART"
+theme_override_colors/font_color = Color(1, 0.6, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "⟳ RESTART"
 
-[node name="EXIT" type="Button" parent="ColorRect/VBoxContainer"]
+[node name="EXIT" type="Button" parent="ColorRect/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 32
-text = "EXIT"
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 24
+text = "✕ EXIT"
 
-[connection signal="pressed" from="ColorRect/VBoxContainer/RESUME" to="." method="_on_resume_pressed"]
-[connection signal="pressed" from="ColorRect/VBoxContainer/RESPAWN" to="." method="_on_respawn_pressed"]
-[connection signal="pressed" from="ColorRect/VBoxContainer/RESTART" to="." method="_on_restart_pressed"]
-[connection signal="pressed" from="ColorRect/VBoxContainer/EXIT" to="." method="_on_exit_pressed"]
+[connection signal="pressed" from="ColorRect/Panel/VBoxContainer/RESUME" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="ColorRect/Panel/VBoxContainer/RESPAWN" to="." method="_on_respawn_pressed"]
+[connection signal="pressed" from="ColorRect/Panel/VBoxContainer/RESTART" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="ColorRect/Panel/VBoxContainer/EXIT" to="." method="_on_exit_pressed"]

@@ -31,77 +31,72 @@ func _ready() -> void:
     close_btn.pressed.connect(_on_close)
 
 func _update_ui() -> void:
-    coins_label.text = "Coins: %d" % PlayerData.coins
+    coins_label.text = "💰 Coins: %d" % PlayerData.coins
 
     # Sword
     if not PlayerData.has_sword:
-        sword_btn.text = "Sword (%d coins) [Press J]" % PlayerData.SWORD_COST
+        sword_btn.text = "⚔ Buy Sword (%d coins)" % PlayerData.SWORD_COST
         sword_btn.disabled = PlayerData.coins < PlayerData.SWORD_COST
     else:
         var sc = PlayerData.get_upgrade_cost("sword")
         if sc == -1:
-            sword_btn.text = "Sword: MAX"
+            sword_btn.text = "⚔ Sword: MAX LEVEL"
             sword_btn.disabled = true
         else:
-            sword_btn.text = "Sword Lv%d → Lv%d (%d coins)" % [PlayerData.sword_level, PlayerData.sword_level + 1, sc]
+            sword_btn.text = "⚔ Sword Lv%d → Lv%d (%d coins)" % [PlayerData.sword_level, PlayerData.sword_level + 1, sc]
             sword_btn.disabled = not PlayerData.can_upgrade("sword")
 
     # Shield
     if not PlayerData.has_shield:
-        shield_btn.text = "Shield (%d coins) [Press K]" % PlayerData.SHIELD_COST
+        shield_btn.text = "🛡 Buy Shield (%d coins)" % PlayerData.SHIELD_COST
         shield_btn.disabled = PlayerData.coins < PlayerData.SHIELD_COST
     else:
         var shc = PlayerData.get_upgrade_cost("shield")
         if shc == -1:
-            shield_btn.text = "Shield: MAX"
+            shield_btn.text = "🛡 Shield: MAX LEVEL"
             shield_btn.disabled = true
         else:
-            shield_btn.text = "Shield Lv%d → Lv%d (%d coins)" % [PlayerData.shield_level, PlayerData.shield_level + 1, shc]
+            shield_btn.text = "🛡 Shield Lv%d → Lv%d (%d coins)" % [PlayerData.shield_level, PlayerData.shield_level + 1, shc]
             shield_btn.disabled = not PlayerData.can_upgrade("shield")
 
     # Health
     var hc = PlayerData.get_upgrade_cost("health")
     if hc == -1:
-        health_btn.text = "Health: MAX"
+        health_btn.text = "❤ Health: MAX LEVEL"
         health_btn.disabled = true
     else:
-        health_btn.text = "Health Lv%d → Lv%d (%d coins)" % [PlayerData.health_level, PlayerData.health_level + 1, hc]
+        health_btn.text = "❤ Health Lv%d → Lv%d (%d coins)" % [PlayerData.health_level, PlayerData.health_level + 1, hc]
         health_btn.disabled = not PlayerData.can_upgrade("health")
 
     # Speed
     var spc = PlayerData.get_upgrade_cost("speed")
     if spc == -1:
-        speed_btn.text = "Speed: MAX"
+        speed_btn.text = "⚡ Speed: MAX LEVEL"
         speed_btn.disabled = true
     else:
-        speed_btn.text = "Speed Lv%d → Lv%d (%d coins)" % [PlayerData.speed_level, PlayerData.speed_level + 1, spc]
+        speed_btn.text = "⚡ Speed Lv%d → Lv%d (%d coins)" % [PlayerData.speed_level, PlayerData.speed_level + 1, spc]
         speed_btn.disabled = not PlayerData.can_upgrade("speed")
 
     # Potion
-    potion_btn.text = "Health Potion (%d coins) [HP: %d/%d]" % [POTION_COST, PlayerData.current_health, PlayerData.max_health]
+    potion_btn.text = "🧪 Health Potion (%d coins) [%d/%d HP]" % [POTION_COST, PlayerData.current_health, PlayerData.max_health]
     potion_btn.disabled = PlayerData.coins < POTION_COST or PlayerData.current_health >= PlayerData.max_health
 
-    # Ranged Attack Unlock
+    # Ranged Attack Unlock - DISABLED
     if ranged_btn:
-        if PlayerData.has_ranged:
-            ranged_btn.text = "Throwing Knife: OWNED"
-            ranged_btn.disabled = true
-        else:
-            ranged_btn.text = "Throwing Knife (%d coins) [Press L]" % PlayerData.RANGED_COST
-            ranged_btn.disabled = PlayerData.coins < PlayerData.RANGED_COST
+        ranged_btn.visible = false
 
     # Dash Unlock
     if dash_btn:
         if PlayerData.has_dash:
-            dash_btn.text = "Dash: OWNED"
+            dash_btn.text = "💨 Dash: OWNED"
             dash_btn.disabled = true
         else:
-            dash_btn.text = "Dash (%d coins) [Press Shift]" % PlayerData.DASH_COST
+            dash_btn.text = "💨 Dash (%d coins)" % PlayerData.DASH_COST
             dash_btn.disabled = PlayerData.coins < PlayerData.DASH_COST
 
     var atk_text = str(PlayerData.get_attack_damage()) if PlayerData.has_sword else "--"
     var shd_text = str(PlayerData.get_shield_durability()) if PlayerData.has_shield else "--"
-    info_label.text = "ATK: %s | Shield: %s | HP: %d/%d | SPD: %d" % [
+    info_label.text = "⚔ ATK: %s | 🛡 DEF: %s | ❤ HP: %d/%d | ⚡ SPD: %d" % [
         atk_text,
         shd_text,
         PlayerData.current_health,

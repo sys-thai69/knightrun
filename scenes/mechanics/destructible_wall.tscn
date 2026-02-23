@@ -1,6 +1,74 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=12 format=3 uid="uid://c5ubb4pjtuq6b"]
 
-[ext_resource type="Script" path="res://script/destructible_wall.gd" id="1"]
+[ext_resource type="Script" uid="uid://dpamskcly60s8" path="res://script/destructible_wall.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bshy6va37dv5f" path="res://brackeys_platformer_assets/brackeys_platformer_assets/sprites/Destructible Objects Sprite Sheet.png" id="2_s0v1c"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uv2q2"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(0, 0, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jsg67"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(64, 0, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vhk8d"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(192, 69, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kj6wl"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(256, 69, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4kx6"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(320, 69, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eapff"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(384, 69, 64, 69)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ic6mu"]
+atlas = ExtResource("2_s0v1c")
+region = Rect2(0, 0, 64, 69)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3w24a"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uv2q2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jsg67")
+}],
+"loop": true,
+"name": &"breaking",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vhk8d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kj6wl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4kx6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eapff")
+}],
+"loop": true,
+"name": &"broke",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ic6mu")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(16, 32)
@@ -9,9 +77,14 @@ size = Vector2(16, 32)
 collision_layer = 5
 script = ExtResource("1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 modulate = Color(0.6, 0.4, 0.3, 1)
-scale = Vector2(1, 2)
+position = Vector2(-1, -3.999999)
+scale = Vector2(0.8046875, 1.4841486)
+sprite_frames = SubResource("SpriteFrames_3w24a")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.8666678
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")

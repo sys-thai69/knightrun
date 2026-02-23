@@ -20,12 +20,6 @@ func set_velocity(v: Vector2) -> void:
 	vel = v
 	rotation = vel.angle()
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	draw_rect(Rect2(-4, -2, 8, 4), Color(0.55, 0.27, 0.07))
-	# Arrowhead
-	draw_rect(Rect2(4, -3, 3, 6), Color(0.4, 0.4, 0.4))
-
 func _physics_process(delta: float) -> void:
 	vel.y += GRAVITY * delta
 	position += vel * delta

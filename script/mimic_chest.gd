@@ -34,18 +34,6 @@ func _ready() -> void:
 	if players.size() > 0:
 		player_ref = players[0]
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	if is_awake:
-		# Angry mimic: teeth showing
-		draw_rect(Rect2(-8, -7, 16, 14), Color(0.7, 0.35, 0.1))
-		draw_rect(Rect2(-6, -7, 12, 4), Color(1.0, 0.2, 0.2))  # Mouth
-	else:
-		# Looks like a chest
-		draw_rect(Rect2(-8, -7, 16, 14), Color(0.6, 0.4, 0.15))
-		draw_rect(Rect2(-2, -3, 4, 4), Color(1.0, 0.85, 0.0))  # Lock
-	draw_rect(Rect2(-8, -7, 16, 14), Color.BLACK, false, 1.0)
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
@@ -132,4 +120,4 @@ func die() -> void:
 
 func _on_hurt_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and body.has_method("take_damage") and is_awake:
-		body.take_damage(2)
+		body.take_damage(1)

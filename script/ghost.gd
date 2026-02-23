@@ -5,6 +5,7 @@ extends CharacterBody2D
 const SPEED = 45.0
 const REVEAL_RANGE = 80.0
 const DETECTION_RANGE = 150.0
+const MAX_CHASE_RANGE = 120.0     # Stop chasing if too far from spawn
 const COIN_DROP = 5
 
 var health: int = 2
@@ -12,6 +13,7 @@ var is_dead: bool = false
 var player_ref: CharacterBody2D = null
 var is_visible_to_player: bool = false
 var _visibility_tween: Tween = null
+var _spawn_position: Vector2 = Vector2.ZERO  # Remember where ghost spawned
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -22,6 +24,8 @@ func _ready() -> void:
 	# Ghosts don't collide with terrain — they float through walls
 	set_collision_mask_value(1, false)
 	modulate = Color(1, 1, 1, 0.05)  # Start nearly invisible (whole node)
+	# Remember spawn position for chase limit
+	_spawn_position = global_position
 	# Off-screen optimization
 	var notifier = VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-20, -20, 40, 40)
@@ -32,15 +36,6 @@ func _ready() -> void:
 	var players = get_tree().get_nodes_in_group("player")
 	if players.size() > 0:
 		player_ref = players[0]
-
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	# Ghostly blue shape
-	draw_rect(Rect2(-10, -10, 20, 20), Color(0.4, 0.6, 1.0, 0.7))
-	# "Eyes"
-	draw_rect(Rect2(-6, -6, 4, 4), Color.WHITE)
-	draw_rect(Rect2(2, -6, 4, 4), Color.WHITE)
-	draw_rect(Rect2(-10, -10, 20, 20), Color(0.6, 0.8, 1.0), false, 1.0)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -63,11 +58,19 @@ func _physics_process(delta: float) -> void:
 			_visibility_tween = create_tween()
 			_visibility_tween.tween_property(self, "modulate:a", 0.05, 0.5)
 
-		# Chase if in detection range
-		if dist < DETECTION_RANGE:
+		# Chase if in detection range AND not too far from spawn
+		var dist_from_spawn = global_position.distance_to(_spawn_position)
+		if dist < DETECTION_RANGE and dist_from_spawn < MAX_CHASE_RANGE:
 			var dir = (player_ref.global_position - global_position).normalized()
 			velocity = dir * SPEED
 			sprite.flip_h = dir.x < 0
+		elif dist_from_spawn >= MAX_CHASE_RANGE:
+			# Return to spawn position
+			var dir_to_spawn = (_spawn_position - global_position).normalized()
+			velocity = dir_to_spawn * SPEED * 0.5
+			sprite.flip_h = dir_to_spawn.x < 0
+			if global_position.distance_to(_spawn_position) < 10:
+				velocity = Vector2.ZERO
 		else:
 			velocity = velocity.move_toward(Vector2.ZERO, 50 * delta)
 	else:

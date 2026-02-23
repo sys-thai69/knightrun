@@ -14,22 +14,6 @@ var _original_position: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	_original_position = position
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	if is_broken:
-		return
-	var crack_ratio = float(current_hits) / float(hits_to_break)
-	var color = Color(0.45, 0.3, 0.2).lerp(Color(0.7, 0.3, 0.2), crack_ratio)
-	draw_rect(Rect2(-8, -16, 16, 32), color)
-	# Brick pattern
-	draw_line(Vector2(-8, -8), Vector2(8, -8), Color.BLACK, 1.0)
-	draw_line(Vector2(-8, 0), Vector2(8, 0), Color.BLACK, 1.0)
-	draw_line(Vector2(-8, 8), Vector2(8, 8), Color.BLACK, 1.0)
-	draw_line(Vector2(0, -16), Vector2(0, -8), Color.BLACK, 1.0)
-	draw_line(Vector2(-4, -8), Vector2(-4, 0), Color.BLACK, 1.0)
-	draw_line(Vector2(4, 0), Vector2(4, 8), Color.BLACK, 1.0)
-	draw_rect(Rect2(-8, -16, 16, 32), Color.BLACK, false, 1.0)
-
 func take_hit(damage: int, _source_type: String = "melee") -> void:
 	if is_broken:
 		return

@@ -7,7 +7,7 @@ const SPEED = 70.0
 const DETECTION_RANGE = 130.0
 const EXPLODE_RANGE = 25.0
 const EXPLODE_DELAY = 1.0
-const EXPLODE_DAMAGE = 2
+const EXPLODE_DAMAGE = 1
 const EXPLODE_RADIUS = 40.0
 const COIN_DROP = 3
 const GRAVITY_VAL = 600.0
@@ -33,14 +33,6 @@ func _ready() -> void:
 	var players = get_tree().get_nodes_in_group("player")
 	if players.size() > 0:
 		player_ref = players[0]
-
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	# Orange-red goblin body
-	draw_rect(Rect2(-5, -7, 10, 14), Color(1.0, 0.4, 0.0))
-	# Bomb on head (circle-ish)
-	draw_rect(Rect2(-3, -11, 6, 4), Color(0.2, 0.2, 0.2))
-	draw_rect(Rect2(-5, -11, 10, 18), Color.BLACK, false, 1.0)
 
 func _physics_process(delta: float) -> void:
 	if is_dead or is_exploding:

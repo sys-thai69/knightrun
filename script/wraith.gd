@@ -38,23 +38,6 @@ func _ready() -> void:
 	if players.size() > 0:
 		player_ref = players[0]
 
-# Placeholder visual
-func _draw() -> void:
-	# Dark hooded figure shape
-	draw_polygon(PackedVector2Array([
-		Vector2(0, -14),
-		Vector2(-10, 0),
-		Vector2(-8, 12),
-		Vector2(8, 12),
-		Vector2(10, 0)
-	]), PackedColorArray([Color(0.15, 0.1, 0.2), Color(0.2, 0.15, 0.25), Color(0.15, 0.1, 0.2), Color(0.2, 0.15, 0.25), Color(0.15, 0.1, 0.2)]))
-	# Glowing eyes
-	draw_circle(Vector2(-3, -4), 2, Color(0.8, 0.2, 0.8, 0.9))
-	draw_circle(Vector2(3, -4), 2, Color(0.8, 0.2, 0.8, 0.9))
-	# Magic aura
-	var aura_alpha = sin(float_offset * 3) * 0.2 + 0.3
-	draw_circle(Vector2.ZERO, 16, Color(0.5, 0.2, 0.6, aura_alpha))
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
@@ -64,7 +47,6 @@ func _physics_process(delta: float) -> void:
 	var bob = sin(float_offset) * 3
 	if sprite:
 		sprite.position.y = bob
-	queue_redraw()  # Redraw placeholder
 	
 	shoot_timer -= delta
 	

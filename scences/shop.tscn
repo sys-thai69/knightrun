@@ -1,6 +1,18 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://script/shop.gd" id="1_shop"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.12, 0.1, 0.18, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6, 0.5, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="Shop" type="CanvasLayer"]
 layer = 11
@@ -13,75 +25,90 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -160.0
-offset_top = -170.0
-offset_right = 160.0
-offset_bottom = 170.0
+offset_left = -170.0
+offset_top = -185.0
+offset_right = 170.0
+offset_bottom = 185.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Title" type="Label" parent="Panel"]
 layout_mode = 1
 offset_left = 10.0
-offset_top = 5.0
-offset_right = 310.0
-offset_bottom = 25.0
+offset_top = 8.0
+offset_right = 330.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 20
 text = "⚔ UPGRADE SHOP ⚔"
 horizontal_alignment = 1
 
 [node name="CoinsLabel" type="Label" parent="Panel"]
 layout_mode = 1
 offset_left = 10.0
-offset_top = 25.0
-offset_right = 310.0
-offset_bottom = 45.0
-text = "Coins: 0"
+offset_top = 38.0
+offset_right = 330.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "💰 Coins: 0"
 horizontal_alignment = 1
 
 [node name="InfoLabel" type="Label" parent="Panel"]
 layout_mode = 1
 offset_left = 10.0
-offset_top = 295.0
-offset_right = 310.0
-offset_bottom = 325.0
-text = "ATK: 1 | Shield: 1 | HP: 3/3 | SPD: 100"
+offset_top = 320.0
+offset_right = 330.0
+offset_bottom = 360.0
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "⚔ ATK: 1 | 🛡 DEF: 1 | ❤ HP: 3/3 | ⚡ SPD: 100"
 horizontal_alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 layout_mode = 1
-offset_left = 20.0
-offset_top = 50.0
-offset_right = 300.0
-offset_bottom = 290.0
+offset_left = 15.0
+offset_top = 60.0
+offset_right = 325.0
+offset_bottom = 315.0
 
 [node name="SwordBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Sword Lv0 → Lv1 (5 coins)"
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+text = "⚔ Sword Lv0 → Lv1 (5 coins)"
 
 [node name="ShieldBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Shield Lv0 → Lv1 (5 coins)"
+theme_override_colors/font_color = Color(0.4, 0.7, 1, 1)
+text = "🛡 Shield Lv0 → Lv1 (5 coins)"
 
 [node name="HealthBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Health Lv0 → Lv1 (8 coins)"
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "❤ Health Lv0 → Lv1 (8 coins)"
 
 [node name="SpeedBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Speed Lv0 → Lv1 (5 coins)"
+theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
+text = "⚡ Speed Lv0 → Lv1 (5 coins)"
 
 [node name="PotionBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Health Potion (3 coins)"
+theme_override_colors/font_color = Color(1, 0.5, 0.7, 1)
+text = "🧪 Health Potion (3 coins)"
 
 [node name="RangedBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Throwing Knife (12 coins)"
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "🗡 Throwing Knife (12 coins)"
 
 [node name="DashBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Dash (10 coins)"
+theme_override_colors/font_color = Color(0.7, 0.5, 1, 1)
+text = "💨 Dash (10 coins)"
 
 [node name="CloseBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Close Shop"
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+text = "❌ Close Shop"

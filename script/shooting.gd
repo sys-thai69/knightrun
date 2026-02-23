@@ -24,6 +24,12 @@ func _ready():
         animated_sprite_2d.flip_h = false
     elif shoot_direction.x < 0:
         animated_sprite_2d.flip_h = true
+    # Off-screen optimization
+    var notifier = VisibleOnScreenNotifier2D.new()
+    notifier.rect = Rect2(-20, -20, 40, 40)
+    add_child(notifier)
+    notifier.screen_exited.connect(func(): fire_timer.stop())
+    notifier.screen_entered.connect(func(): if not is_dead: fire_timer.start())
 
 func _on_fire_timer_timeout():
     if is_dead:
@@ -31,7 +37,9 @@ func _on_fire_timer_timeout():
     animated_sprite_2d.play("shooting")
     var fireball = FIREBALL_SCENE.instantiate()
     get_parent().add_child(fireball)
-    fireball.global_position = muzzle_node.global_position
+    # Spawn fireball in front of slime based on direction
+    var spawn_offset = Vector2(shoot_direction.x * 12, -5)
+    fireball.global_position = global_position + spawn_offset
     fireball.direction = shoot_direction
     if not animated_sprite_2d.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
         animated_sprite_2d.animation_finished.connect(_on_animated_sprite_2d_animation_finished)

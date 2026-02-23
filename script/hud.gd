@@ -20,7 +20,7 @@ func _ready() -> void:
     timer_label.name = "TimerLabel"
     timer_label.add_theme_font_size_override("font_size", 12)
     timer_label.add_theme_color_override("font_color", Color.YELLOW)
-    timer_label.position = Vector2(10, 52)  # Below stamina bar
+    timer_label.position = Vector2(10, 66)  # Below stamina bar
     timer_label.visible = false
     add_child(timer_label)
     # Create stamina bar
@@ -38,7 +38,7 @@ func _create_stamina_bar() -> void:
     stamina_label.text = "ST"
     stamina_label.add_theme_font_size_override("font_size", 10)
     stamina_label.add_theme_color_override("font_color", Color.WHITE)
-    stamina_label.position = Vector2(10, 32)
+    stamina_label.position = Vector2(10, 46)
     add_child(stamina_label)
     # Progress bar for stamina
     stamina_bar = ProgressBar.new()
@@ -48,7 +48,7 @@ func _create_stamina_bar() -> void:
     stamina_bar.value = 100
     stamina_bar.show_percentage = false
     stamina_bar.size = Vector2(80, 10)
-    stamina_bar.position = Vector2(28, 34)
+    stamina_bar.position = Vector2(28, 48)
     # Style the stamina bar with green/yellow colors
     var style_bg = StyleBoxFlat.new()
     style_bg.bg_color = Color(0.2, 0.2, 0.2, 0.8)

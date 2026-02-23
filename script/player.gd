@@ -284,9 +284,9 @@ func _physics_process(delta: float) -> void:
         else:
             _try_pick_up_block()
 
-    # --- Ranged Attack (L key) ---
-    if Input.is_action_just_pressed("ranged_attack") and PlayerData.has_ranged and ranged_cooldown <= 0 and not is_attacking and not is_blocking and not has_torch:
-        _ranged_attack()
+    # --- Ranged Attack (L key) --- DISABLED FOR NOW
+    # if Input.is_action_just_pressed("ranged_attack") and PlayerData.has_ranged and ranged_cooldown <= 0 and not is_attacking and not is_blocking and not has_torch:
+    #     _ranged_attack()
 
     # --- Charged Attack (hold J) ---
     if Input.is_action_pressed("attack") and not is_blocking and not is_attacking and PlayerData.has_sword and not has_torch:

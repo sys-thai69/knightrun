@@ -40,16 +40,6 @@ func _ready() -> void:
 		player_ref = players[0]
 	_update_raycast_direction()
 
-# Placeholder visual — remove when real sprites are added
-func _draw() -> void:
-	# Gray armored body
-	draw_rect(Rect2(-7, -11, 14, 22), Color(0.65, 0.65, 0.7))
-	# Shield on front side (flickers when turning)
-	var shield_alpha = 0.5 if is_turning else 1.0
-	var shield_x = 5 if facing_right else -9
-	draw_rect(Rect2(shield_x, -8, 4, 16), Color(0.4, 0.4, 0.5, shield_alpha))
-	draw_rect(Rect2(-7, -11, 14, 22), Color.BLACK, false, 1.0)
-
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
