@@ -27,6 +27,15 @@ var dash_direction: float = 0.0
 # --- Ground Pound ---
 var is_ground_pounding: bool = false
 
+# --- Stamina ---
+const MAX_STAMINA: float = 100.0
+const STAMINA_REGEN_RATE: float = 25.0  # Per second
+const DASH_STAMINA_COST: float = 30.0
+const SHIELD_STAMINA_COST: float = 15.0  # Per second while blocking
+var current_stamina: float = MAX_STAMINA
+var stamina_regen_delay: float = 0.0  # Delay before regen starts after use
+const STAMINA_REGEN_DELAY_TIME: float = 0.5
+
 # --- Combat ---
 var is_attacking: bool = false
 var is_blocking: bool = false
@@ -128,6 +137,12 @@ func _physics_process(delta: float) -> void:
     if parry_window > 0:
         parry_window -= delta
 
+    # ---- Stamina Regen ----
+    if stamina_regen_delay > 0:
+        stamina_regen_delay -= delta
+    elif not is_blocking and current_stamina < MAX_STAMINA:
+        current_stamina = min(current_stamina + STAMINA_REGEN_RATE * delta, MAX_STAMINA)
+
     # ---- Invincibility timer ----
     if invincibility_timer > 0:
         invincibility_timer -= delta
@@ -218,7 +233,7 @@ func _physics_process(delta: float) -> void:
                 velocity.y = min(velocity.y, WALL_SLIDE_SPEED)
 
     # --- Shield Block (hold K) / Parry (tap K) ---
-    if Input.is_action_just_pressed("shield") and not is_attacking and PlayerData.has_shield:
+    if Input.is_action_just_pressed("shield") and not is_attacking and PlayerData.has_shield and current_stamina > 0:
         # Start parry window
         parry_window = PARRY_DURATION
         is_blocking = true
@@ -226,17 +241,30 @@ func _physics_process(delta: float) -> void:
         sprite.play("idle")  # Could use a shield animation if available
         sprite.modulate = Color(0.6, 0.8, 1.0)  # Blue tint while shielding
 
+    # Shield consumes stamina while held
+    if is_blocking:
+        current_stamina -= SHIELD_STAMINA_COST * delta
+        stamina_regen_delay = STAMINA_REGEN_DELAY_TIME
+        if current_stamina <= 0:
+            current_stamina = 0
+            is_blocking = false
+            parry_window = 0.0
+            sprite.modulate = Color.WHITE
+
     if Input.is_action_just_released("shield"):
         is_blocking = false
         parry_window = 0.0
         sprite.modulate = Color.WHITE
 
     # --- Dash (Shift) ---
-    if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0 and PlayerData.has_dash and not is_attacking:
+    if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0 and PlayerData.has_dash and not is_attacking and current_stamina >= DASH_STAMINA_COST:
         is_dashing = true
         dash_timer = DASH_DURATION
         dash_cooldown_timer = DASH_COOLDOWN
         invincible = true
+        # Consume stamina for dash
+        current_stamina -= DASH_STAMINA_COST
+        stamina_regen_delay = STAMINA_REGEN_DELAY_TIME
         # Dash in the facing direction
         dash_direction = -1.0 if sprite.flip_h else 1.0
         # Dash trail effect

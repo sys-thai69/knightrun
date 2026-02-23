@@ -507,7 +507,7 @@ position = Vector2(612, -332)
 position = Vector2(546, -397)
 
 [node name="LoreScroll" parent="." instance=ExtResource("29_65y2b")]
-position = Vector2(1509, -378)
+position = Vector2(1512, -375)
 
 [node name="platform17" parent="." instance=ExtResource("3_nkw88")]
 position = Vector2(-690, -283)

@@ -74,10 +74,7 @@ func _ready() -> void:
     var players: Array[Node] = get_tree().get_nodes_in_group("player")
     if players.size() > 0:
         player_ref = players[0]
-    # Connect to boss HP bar if present
-    var hp_bar = get_parent().get_node_or_null("BossHPBar")
-    if hp_bar and hp_bar.has_method("set_boss"):
-        hp_bar.set_boss(self)
+    # Do NOT show HP bar yet - wait until boss is activated
     # Start idle animation
     _play("idle")
 
@@ -104,6 +101,10 @@ func _physics_process(delta: float) -> void:
                 return
             else:
                 is_activated = true
+                # Show boss HP bar when activated
+                var hp_bar = get_parent().get_node_or_null("BossHPBar")
+                if hp_bar and hp_bar.has_method("set_boss"):
+                    hp_bar.set_boss(self)
 
         # Face player (flip sprite)
         if not is_charging and not is_acting:

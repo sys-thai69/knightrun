@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://wraith_enemy_001"]
+
+[ext_resource type="Script" path="res://script/wraith.gd" id="1_wraith"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wraith"]
+radius = 8.0
+height = 24.0
+
+[node name="Wraith" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_wraith")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_wraith")
+
+[node name="HurtArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="HurtShape" type="CollisionShape2D" parent="HurtArea"]
+shape = SubResource("CapsuleShape2D_wraith")
+
+[connection signal="body_entered" from="HurtArea" to="." method="_on_hurt_area_body_entered"]
