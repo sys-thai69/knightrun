@@ -19,6 +19,7 @@ var _spawn_position: Vector2 = Vector2.ZERO  # Remember where ghost spawned
 
 func _ready() -> void:
 	add_to_group("enemy")
+	add_to_group("ghost")  # For summoner to track ghost count
 	# Scale HP with NG+
 	health = int(health * PlayerData.get_enemy_hp_multiplier())
 	# Ghosts don't collide with terrain — they float through walls
@@ -41,7 +42,7 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
-	if player_ref and not player_ref.is_dead:
+	if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
 		var dist = global_position.distance_to(player_ref.global_position)
 
 		# Visibility based on distance

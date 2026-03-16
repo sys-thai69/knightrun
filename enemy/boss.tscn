@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://g35qmmkwwek8"]
+[gd_scene load_steps=29 format=3 uid="uid://g35qmmkwwek8"]
 
 [ext_resource type="Script" uid="uid://das56m45lcuc4" path="res://script/boss.gd" id="1_boss"]
 [ext_resource type="PackedScene" uid="uid://bpldsl1t5cwsc" path="res://enemy/fireball.tscn" id="2_fireball"]
@@ -171,36 +171,35 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(20, 28)
+size = Vector2(40, 54)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-size = Vector2(24, 20)
+size = Vector2(51, 52)
 
 [node name="Boss" type="CharacterBody2D"]
 position = Vector2(-13, -11)
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("1_boss")
 projectile_scene = ExtResource("2_fireball")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, 4)
-scale = Vector2(0.08, 0.08)
+position = Vector2(0.29999998, 3.62)
+scale = Vector2(0.2, 0.2)
 sprite_frames = SubResource("SpriteFrames_mucck")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.8915232
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 4)
+position = Vector2(1, 5)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="AttackArea" type="Area2D" parent="."]
-position = Vector2(12, 0)
+position = Vector2(25, 0)
 collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
-position = Vector2(0, 4)
+position = Vector2(-9.5, 6)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true

@@ -92,7 +92,6 @@ size = Vector2(12, 12)
 [node name="shooting_slime" type="Area2D"]
 collision_layer = 4
 collision_mask = 2
-monitorable = true
 script = ExtResource("1_ta5lo")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -111,7 +110,7 @@ wait_time = 3.0
 wait_time = 0.6
 
 [node name="Marker2D" type="Marker2D" parent="."]
-position = Vector2(18, -5)
+position = Vector2(17, -7)
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

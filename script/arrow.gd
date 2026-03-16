@@ -1,8 +1,8 @@
-# arrow.gd — Parabolic arrow projectile fired by Skeleton Archer
+# arrow.gd — Arrow projectile fired by Skeleton Archer
 extends Area2D
 
 var vel: Vector2 = Vector2.ZERO
-const GRAVITY = 400.0
+const GRAVITY = 400.0  # Normal gravity for parabolic arc after initial straight shot
 var damage: int = 1
 var reflected: bool = false
 

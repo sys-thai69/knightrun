@@ -59,7 +59,7 @@ func _crawl(delta: float) -> void:
 		_flip_cooldown = 0.15
 
 	# Check if player is below
-	if player_ref and not player_ref.is_dead:
+	if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
 		var dx = abs(global_position.x - player_ref.global_position.x)
 		var dy = player_ref.global_position.y - global_position.y
 		if dx < DETECT_RANGE_X and dy > 0 and dy < 160:

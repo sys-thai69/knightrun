@@ -16,6 +16,11 @@ var sword_level: int = 0   # Each level: +1 damage
 var shield_level: int = 0  # Each level: +1 block hits before break
 var health_level: int = 0  # Each level: +1 max HP
 var speed_level: int = 0   # Each level: +10 speed
+var stamina_level: int = 0 # Each level: +~17% stamina (up to 1.5x at level 3)
+
+# --- Stage/Time Scaling ---
+var game_elapsed_time: float = 0.0  # Total playtime for enemy scaling
+var current_stage: int = 1  # Increases as player progresses
 
 # --- Unlockable Abilities ---
 var has_sword: bool = false    # Unlocked via shop
@@ -55,9 +60,11 @@ const UPGRADE_COSTS = {
 	"shield": [3, 5, 10],
 	"health": [4, 8, 12],
 	"speed": [3, 5, 8],
+	"stamina": [4, 6, 10],
 }
 const MAX_UPGRADE_LEVEL = 3
 const SWORD_COST = 4
+const STAMINA_COST = 4
 const SHIELD_COST = 4
 const RANGED_COST = 6
 const DASH_COST = 5
@@ -74,6 +81,23 @@ func get_max_health() -> int:
 
 func get_speed_bonus() -> float:
 	return speed_level * 10.0
+
+func get_max_stamina() -> float:
+	# Base 100, max 150 at level 3 (1.5x)
+	return 100.0 + stamina_level * 16.67
+
+# --- Stage-based Enemy HP Scaling ---
+func get_stage_hp_multiplier() -> float:
+	# Increases enemy HP by 10% per stage and 5% per minute played (capped)
+	var stage_mult = 1.0 + (current_stage - 1) * 0.1
+	var time_mult = 1.0 + min(game_elapsed_time / 60.0, 5.0) * 0.05  # Max +25% from time
+	return stage_mult * time_mult
+
+func advance_stage() -> void:
+	current_stage += 1
+
+func update_game_time(delta: float) -> void:
+	game_elapsed_time += delta
 
 # --- Coin Management ---
 func add_coins(amount: int) -> void:
@@ -130,6 +154,7 @@ func upgrade(stat: String) -> bool:
 			current_health += 1  # Gain the HP immediately
 			health_changed.emit(current_health, max_health)
 		"speed": speed_level += 1
+		"stamina": stamina_level += 1
 	return true
 
 func get_upgrade_cost(stat: String) -> int:
@@ -144,6 +169,7 @@ func _get_level(stat: String) -> int:
 		"shield": return shield_level
 		"health": return health_level
 		"speed": return speed_level
+		"stamina": return stamina_level
 	return 0
 
 # --- Reset (new game) ---
@@ -153,6 +179,9 @@ func reset_all() -> void:
 	shield_level = 0
 	health_level = 0
 	speed_level = 0
+	stamina_level = 0
+	game_elapsed_time = 0.0
+	current_stage = 1
 	has_sword = false
 	has_shield = false
 	has_ranged = false
@@ -180,7 +209,9 @@ func reset_health_only() -> void:
 
 # --- New Game+ ---
 func get_enemy_hp_multiplier() -> float:
-	return 1.0 + ng_plus_level * 0.5  # 1.0, 1.5, 2.0, ...
+	# Combines NG+ scaling with stage/time scaling
+	var ng_mult = 1.0 + ng_plus_level * 0.5  # 1.0, 1.5, 2.0, ...
+	return ng_mult * get_stage_hp_multiplier()
 
 func get_enemy_damage_multiplier() -> int:
 	return 1 + ng_plus_level  # 1, 2, 3, ...

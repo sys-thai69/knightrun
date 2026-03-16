@@ -5,8 +5,8 @@ extends Area2D
 var direction: Vector2 = Vector2.ZERO:
     set(value):
         direction = value
-        # Flip sprite based on direction when it's set
-        if animated_sprite_2d:
+        # Flip sprite based on direction when it's set (only if ready)
+        if is_inside_tree() and animated_sprite_2d:
             animated_sprite_2d.flip_h = direction.x < 0
 
 const SPEED = 100 # Adjust as needed
@@ -18,6 +18,12 @@ var reflected: bool = false
 
 func _ready() -> void:
     add_to_group("projectile")
+    # Ensure sprite is visible and playing
+    if animated_sprite_2d:
+        animated_sprite_2d.visible = true
+        animated_sprite_2d.play("default")
+        # Apply direction flip now that we're ready
+        animated_sprite_2d.flip_h = direction.x < 0
     # Safety timeout: destroy after 10 seconds if it somehow misses everything
     if timer:
         timer.wait_time = 10.0

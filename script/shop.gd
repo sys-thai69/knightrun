@@ -7,6 +7,7 @@ signal shop_closed
 @onready var shield_btn: Button = $Panel/VBoxContainer/ShieldBtn
 @onready var health_btn: Button = $Panel/VBoxContainer/HealthBtn
 @onready var speed_btn: Button = $Panel/VBoxContainer/SpeedBtn
+@onready var stamina_btn: Button = $Panel/VBoxContainer/StaminaBtn
 @onready var potion_btn: Button = $Panel/VBoxContainer/PotionBtn
 @onready var ranged_btn: Button = $Panel/VBoxContainer/RangedBtn
 @onready var dash_btn: Button = $Panel/VBoxContainer/DashBtn
@@ -24,6 +25,8 @@ func _ready() -> void:
     health_btn.pressed.connect(_on_health)
     speed_btn.pressed.connect(_on_speed)
     potion_btn.pressed.connect(_on_potion)
+    if stamina_btn:
+        stamina_btn.pressed.connect(_on_stamina)
     if ranged_btn:
         ranged_btn.pressed.connect(_on_ranged)
     if dash_btn:
@@ -81,9 +84,26 @@ func _update_ui() -> void:
     potion_btn.text = "🧪 Health Potion (%d coins) [%d/%d HP]" % [POTION_COST, PlayerData.current_health, PlayerData.max_health]
     potion_btn.disabled = PlayerData.coins < POTION_COST or PlayerData.current_health >= PlayerData.max_health
 
-    # Ranged Attack Unlock - DISABLED
+    # Ranged Attack Unlock - Throwing Knife / Glowing Arrow
     if ranged_btn:
-        ranged_btn.visible = false
+        if PlayerData.has_ranged:
+            ranged_btn.text = "🏹 Ranged: OWNED"
+            ranged_btn.disabled = true
+        else:
+            ranged_btn.text = "🏹 Throwing Arrow (%d coins)" % PlayerData.RANGED_COST
+            ranged_btn.disabled = PlayerData.coins < PlayerData.RANGED_COST
+
+    # Stamina Upgrade
+    if stamina_btn:
+        var stc = PlayerData.get_upgrade_cost("stamina")
+        if stc == -1:
+            stamina_btn.text = "🔋 Stamina: MAX (150%)"
+            stamina_btn.disabled = true
+        else:
+            var current_pct = int(100 + PlayerData.stamina_level * 16.67)
+            var next_pct = int(100 + (PlayerData.stamina_level + 1) * 16.67)
+            stamina_btn.text = "🔋 Stamina %d%% → %d%% (%d coins)" % [current_pct, next_pct, stc]
+            stamina_btn.disabled = not PlayerData.can_upgrade("stamina")
 
     # Dash Unlock
     if dash_btn:
@@ -136,6 +156,11 @@ func _on_speed() -> void:
     AchievementManager.check_upgrade_achievements()
     _update_ui()
 
+func _on_stamina() -> void:
+    PlayerData.upgrade("stamina")
+    AchievementManager.check_upgrade_achievements()
+    _update_ui()
+
 func _on_potion() -> void:
     if PlayerData.spend_coins(POTION_COST):
         PlayerData.heal(1)
@@ -145,7 +170,7 @@ func _on_ranged() -> void:
     if not PlayerData.has_ranged and PlayerData.spend_coins(PlayerData.RANGED_COST):
         PlayerData.has_ranged = true
         _update_ui()
-        _show_unlock_popup("THROWING KNIFE UNLOCKED!", "Press L to throw knives at enemies.\nCooldown: 0.6s")
+        _show_unlock_popup("GLOWING ARROW UNLOCKED!", "Press L to shoot arrows at enemies.\nArrows arc with gravity. Cooldown: 0.6s")
 
 func _on_dash() -> void:
     if not PlayerData.has_dash and PlayerData.spend_coins(PlayerData.DASH_COST):

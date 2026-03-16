@@ -44,7 +44,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = 0
 
-	if player_ref and not player_ref.is_dead:
+	if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
 		var dist = global_position.distance_to(player_ref.global_position)
 		var dir = sign(player_ref.global_position.x - global_position.x)
 
@@ -81,7 +81,7 @@ func _explode() -> void:
 	ScreenEffects.shake(6.0, 0.25)
 	# Damage everything in radius
 	# Check player distance
-	if player_ref and not player_ref.is_dead:
+	if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
 		if global_position.distance_to(player_ref.global_position) < EXPLODE_RADIUS:
 			player_ref.take_damage(EXPLODE_DAMAGE)
 

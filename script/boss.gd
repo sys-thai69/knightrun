@@ -6,7 +6,7 @@ extends CharacterBody2D
 signal boss_defeated
 
 # --- Stats ---
-const MAX_HEALTH: int = 30
+const MAX_HEALTH: int = 60
 var health: int = MAX_HEALTH
 var scaled_max_health: int = MAX_HEALTH  # Actual max after NG+ scaling
 var is_dead: bool = false
@@ -51,6 +51,11 @@ const SLAM_DAMAGE_RADIUS: float = 80.0  # Shockwave radius
 var is_blocking: bool = false
 var block_chance: float = 0.3  # 30% chance to block incoming damage
 
+# --- 50% HP Summon ---
+var has_summoned_backup: bool = false
+var summoner_scene: PackedScene = preload("res://enemy/summoner.tscn")
+var homing_scene: PackedScene = preload("res://scenes/homing_projectile.tscn")
+
 # --- Hit Effect ---
 var base_sprite_scale: Vector2 = Vector2.ONE
 var pop_tween: Tween = null
@@ -61,12 +66,17 @@ var telegraph_tween: Tween = null
 # --- Ranged Attack ---
 @export var projectile_scene: PackedScene  # Drag fireball.tscn here in Inspector
 
+# --- Pre-generated shockwave texture (optimization) ---
+var _shockwave_texture: ImageTexture = null
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_collision: CollisionShape2D = $AttackArea/CollisionShape2D
+var hurt_area: Area2D = null  # Created dynamically in _setup_hurt_area()
 
 func _ready() -> void:
     add_to_group("enemy")
+    add_to_group("boss")
     # Scale boss HP with NG+ level
     health = int(MAX_HEALTH * PlayerData.get_enemy_hp_multiplier())
     scaled_max_health = health
@@ -74,6 +84,13 @@ func _ready() -> void:
         attack_collision.disabled = true
     # Store original sprite scale so hit effects can pop and return correctly
     base_sprite_scale = sprite.scale
+    # Pre-generate shockwave texture
+    _create_shockwave_texture()
+    # Setup attack area signal for real-time hit detection
+    if attack_area:
+        attack_area.body_entered.connect(_on_attack_area_body_entered)
+    # Setup hurt area for body contact damage
+    _setup_hurt_area()
     # Find the player
     await get_tree().process_frame
     var players: Array[Node] = get_tree().get_nodes_in_group("player")
@@ -82,6 +99,49 @@ func _ready() -> void:
     # Do NOT show HP bar yet - wait until boss is activated
     # Start idle animation
     _play("idle")
+
+func _setup_hurt_area() -> void:
+    # Create a hurt area for body contact damage (during charge, etc.)
+    if not has_node("HurtArea"):
+        hurt_area = Area2D.new()
+        hurt_area.name = "HurtArea"
+        hurt_area.collision_layer = 0
+        hurt_area.collision_mask = 2  # Detect player
+        var shape = CollisionShape2D.new()
+        var rect = RectangleShape2D.new()
+        rect.size = Vector2(20, 26)
+        shape.shape = rect
+        shape.position = Vector2(0, 0)
+        hurt_area.add_child(shape)
+        add_child(hurt_area)
+    if hurt_area:
+        hurt_area.body_entered.connect(_on_hurt_area_body_entered)
+
+func _on_attack_area_body_entered(body: Node2D) -> void:
+    # Real-time attack hit detection (triggers when player enters attack area during attack)
+    if is_dead:
+        return
+    # Only deal damage if attack collision is active (attack is happening)
+    if attack_collision and not attack_collision.disabled:
+        if body.is_in_group("player") and body.has_method("take_damage"):
+            body.take_damage(1)
+
+func _on_hurt_area_body_entered(body: Node2D) -> void:
+    # Body contact damage (during charge)
+    if is_dead:
+        return
+    if is_charging and body.is_in_group("player") and body.has_method("take_damage"):
+        body.take_damage(2)
+
+func _create_shockwave_texture() -> void:
+    # Pre-generate the shockwave ring texture once
+    var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+    for x in range(64):
+        for y in range(64):
+            var dist = Vector2(x - 32, y - 32).length()
+            if dist >= 28 and dist <= 32:
+                img.set_pixel(x, y, Color.WHITE)
+    _shockwave_texture = ImageTexture.create_from_image(img)
 
 func _physics_process(delta: float) -> void:
     if is_dead:
@@ -93,7 +153,7 @@ func _physics_process(delta: float) -> void:
 
     attack_timer -= delta
 
-    if player_ref and not player_ref.is_dead:
+    if player_ref and is_instance_valid(player_ref) and not player_ref.is_dead:
         var dist: float = global_position.distance_to(player_ref.global_position)
         var dir_to_player: int = int(sign(player_ref.global_position.x - global_position.x))
 
@@ -145,17 +205,17 @@ func _physics_process(delta: float) -> void:
             return
 
         # --- Phase-based AI ---
-        if dist < 30 and attack_timer <= 0:
+        if dist < 50 and attack_timer <= 0:
             _melee_attack()
-        elif phase >= 2 and dist > 150 and attack_timer <= 0:
+        elif phase >= 2 and dist > 180 and attack_timer <= 0:
             _ranged_attack(dir_to_player)
-        elif phase >= 2 and dist > 60 and dist < 150 and attack_timer <= 0:
+        elif phase >= 2 and dist > 80 and dist < 180 and attack_timer <= 0:
             # Phase 2+: Random choice between charge and ranged
             if randf() < 0.6:
                 _charge_attack(dir_to_player)
             else:
                 _ranged_attack(dir_to_player)
-        elif phase >= 3 and dist > 40 and dist < 120 and attack_timer <= 0 and is_on_floor():
+        elif phase >= 3 and dist > 60 and dist < 150 and attack_timer <= 0 and is_on_floor():
             # Phase 3: Slam or combo attack
             if randf() < 0.4:
                 _slam_attack()
@@ -173,10 +233,13 @@ func _physics_process(delta: float) -> void:
 
 # --- ATTACKS ---
 
+var _attack_hit_this_swing: bool = false  # Track if we hit player this attack
+
 func _melee_attack() -> void:
     is_acting = true
     velocity.x = 0
     attack_timer = attack_cooldown
+    _attack_hit_this_swing = false
     
     # Telegraph attack with color flash
     _telegraph_attack()
@@ -188,24 +251,32 @@ func _melee_attack() -> void:
 
     if attack_collision:
         attack_collision.disabled = false
-
-    # Use timer fallback in case animation_finished doesn't fire
-    var anim_timeout = get_tree().create_timer(0.6)
-    sprite.animation_finished.connect(func(): pass, CONNECT_ONE_SHOT)
-    await anim_timeout.timeout
-    if is_dead or not is_instance_valid(self):
-        return
-
-    # Deal damage at end of animation
-    if attack_area:
-        for body in attack_area.get_overlapping_bodies():
-            if body.is_in_group("player") and body.has_method("take_damage"):
-                body.take_damage(1)
+    
+    # Continuously check for hits during the attack swing
+    var attack_duration = 0.5
+    var elapsed = 0.0
+    while elapsed < attack_duration:
+        if is_dead or not is_instance_valid(self):
+            return
+        if not _attack_hit_this_swing:
+            _deal_attack_damage(1)
+        await get_tree().process_frame
+        elapsed += get_physics_process_delta_time()
 
     if attack_collision:
         attack_collision.disabled = true
     is_acting = false
     _play("idle")
+
+func _deal_attack_damage(damage: int) -> void:
+    # Helper function to deal damage to overlapping players
+    if attack_area:
+        for body in attack_area.get_overlapping_bodies():
+            if body.is_in_group("player") and body.has_method("take_damage"):
+                if not body.invincible:  # Only hit if player isn't invincible
+                    body.take_damage(damage)
+                    _attack_hit_this_swing = true
+                return
 
 func _combo_attack(dir: int) -> void:
     # Phase 3 combo: charge into melee
@@ -236,14 +307,12 @@ func _combo_attack(dir: int) -> void:
     if attack_collision:
         attack_collision.disabled = false
     _play("attack")
+    _deal_attack_damage(2)  # Damage on swing start
     await get_tree().create_timer(0.4).timeout
     if is_dead or not is_instance_valid(self):
         return
     
-    if attack_area:
-        for body in attack_area.get_overlapping_bodies():
-            if body.is_in_group("player") and body.has_method("take_damage"):
-                body.take_damage(2)  # Combo does more damage
+    _deal_attack_damage(2)  # Damage on swing end
     
     if attack_collision:
         attack_collision.disabled = true
@@ -277,17 +346,34 @@ func _ranged_attack(dir: int) -> void:
     if is_dead or not is_instance_valid(self):
         return
 
-    # Spawn projectile
+    # Spawn multiple fireballs in spread pattern
     if projectile_scene:
-        var proj: Node2D = projectile_scene.instantiate()
-        get_parent().add_child(proj)
-        proj.global_position = global_position + Vector2(20.0 * dir, -10.0)
-        if proj.has_method("set_direction"):
-            proj.set_direction(dir)
-        elif "shoot_direction" in proj:
-            proj.shoot_direction = Vector2(dir, 0)
+        var fireball_count = 3 if phase >= 2 else 2
+        var spread_angles = [-0.3, 0, 0.3] if fireball_count == 3 else [-0.15, 0.15]
+        for i in range(fireball_count):
+            var proj: Node2D = projectile_scene.instantiate()
+            get_parent().add_child(proj)
+            proj.global_position = global_position + Vector2(20.0 * dir, -10.0)
+            # Set direction with spread
+            var angle = spread_angles[i] if i < spread_angles.size() else 0.0
+            var fire_dir = Vector2(dir, angle).normalized()
+            if "direction" in proj:
+                proj.direction = fire_dir
+            elif proj.has_method("set_direction"):
+                proj.set_direction(fire_dir)
+    
+    # In phase 3, also shoot a homing projectile
+    if phase >= 3 and homing_scene:
+        await get_tree().create_timer(0.2).timeout
+        if is_dead or not is_instance_valid(self):
+            return
+        var homing = homing_scene.instantiate()
+        get_parent().add_child(homing)
+        homing.global_position = global_position + Vector2(15.0 * dir, -15.0)
+        if "direction" in homing:
+            homing.direction = Vector2(dir, 0)
 
-    await get_tree().create_timer(0.5).timeout
+    await get_tree().create_timer(0.3).timeout
     if is_dead or not is_instance_valid(self):
         return
     is_acting = false
@@ -330,22 +416,13 @@ func _slam_impact() -> void:
     _play("idle")
 
 func _spawn_shockwave() -> void:
-    # Create a visual ring effect for the shockwave
+    # Create a visual ring effect for the shockwave using pre-generated texture
     var ring = Sprite2D.new()
     ring.modulate = Color(1, 0.3, 0.3, 0.8)
     ring.scale = Vector2(0.1, 0.1)
     ring.global_position = global_position
     ring.z_index = -1
-    
-    # Use a white texture as a circle placeholder
-    var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
-    for x in range(64):
-        for y in range(64):
-            var dist = Vector2(x - 32, y - 32).length()
-            if dist >= 28 and dist <= 32:
-                img.set_pixel(x, y, Color.WHITE)
-    var tex = ImageTexture.create_from_image(img)
-    ring.texture = tex
+    ring.texture = _shockwave_texture
     get_parent().add_child(ring)
     
     var tween = create_tween()
@@ -430,6 +507,15 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
 
 func _check_phase() -> void:
     var hp_percent: float = float(health) / float(scaled_max_health)
+    
+    # At 50% HP: boost resistance and summon backup
+    if hp_percent <= 0.5 and not has_summoned_backup:
+        has_summoned_backup = true
+        _summon_backup()
+        # Boost resistances
+        melee_resistance = min(melee_resistance + 0.3, 0.75)
+        ranged_resistance = min(ranged_resistance + 0.3, 0.75)
+    
     if hp_percent <= 0.3 and phase < 3:
         phase = 3
         current_speed = SPEED_PHASE3
@@ -441,6 +527,22 @@ func _check_phase() -> void:
         current_speed = SPEED_PHASE2
         attack_cooldown = 1.5
         _phase_transition_effect(2)
+
+func _summon_backup() -> void:
+    # Summon a Summoner beside the boss
+    if summoner_scene:
+        var summoner = summoner_scene.instantiate()
+        # Use call_deferred to avoid state change during physics
+        get_parent().call_deferred("add_child", summoner)
+        # Spawn to the side of the boss
+        var spawn_offset = 60 if sprite.flip_h else -60
+        summoner.set_deferred("global_position", global_position + Vector2(spawn_offset, 0))
+        # Visual effect
+        ScreenEffects.shake(2.0, 0.15)
+        # Flash effect on summoner spawn
+        var flash_tween = create_tween().set_loops(3)
+        flash_tween.tween_property(sprite, "modulate", Color(1, 0, 1), 0.1)
+        flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
 
 func _adaptation_effect() -> void:
     _play("adapt")

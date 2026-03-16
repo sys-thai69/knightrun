@@ -28,11 +28,11 @@ var dash_direction: float = 0.0
 var is_ground_pounding: bool = false
 
 # --- Stamina ---
-const MAX_STAMINA: float = 100.0
+const BASE_STAMINA: float = 100.0
 const STAMINA_REGEN_RATE: float = 25.0  # Per second
-const DASH_STAMINA_COST: float = 30.0
-const SHIELD_STAMINA_COST: float = 15.0  # Per second while blocking
-var current_stamina: float = MAX_STAMINA
+const DASH_STAMINA_COST: float = 40.0
+const SHIELD_STAMINA_COST: float = 25.0  # Per second while blocking
+var current_stamina: float = BASE_STAMINA
 var stamina_regen_delay: float = 0.0  # Delay before regen starts after use
 const STAMINA_REGEN_DELAY_TIME: float = 0.5
 
@@ -138,10 +138,11 @@ func _physics_process(delta: float) -> void:
         parry_window -= delta
 
     # ---- Stamina Regen ----
+    var max_stamina = PlayerData.get_max_stamina()
     if stamina_regen_delay > 0:
         stamina_regen_delay -= delta
-    elif not is_blocking and current_stamina < MAX_STAMINA:
-        current_stamina = min(current_stamina + STAMINA_REGEN_RATE * delta, MAX_STAMINA)
+    elif not is_blocking and current_stamina < max_stamina:
+        current_stamina = min(current_stamina + STAMINA_REGEN_RATE * delta, max_stamina)
 
     # ---- Invincibility timer ----
     if invincibility_timer > 0:
@@ -602,9 +603,9 @@ func take_damage(amount: int = 1) -> void:
     if PlayerData.current_health > 0:
         if sfx_hurt:
             sfx_hurt.play()
-        # Brief invincibility
+        # Brief invincibility (shortened for faster gameplay)
         invincible = true
-        invincibility_timer = 1.0
+        invincibility_timer = 0.5
         _flash_damage()
 
 func _parry_success() -> void:

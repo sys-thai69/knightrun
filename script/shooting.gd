@@ -1,5 +1,6 @@
 extends Area2D
 const FIREBALL_SCENE = preload("res://enemy/fireball.tscn")
+const DETECTION_RANGE: float = 150.0  # Only shoot when player is nearby
 @onready var fire_timer: Timer = $FireTimer
 @onready var timer: Timer = $Timer
 @onready var muzzle_node: Marker2D = $Marker2D
@@ -8,6 +9,7 @@ const FIREBALL_SCENE = preload("res://enemy/fireball.tscn")
 
 var health: int = 3
 var is_dead: bool = false
+var player_ref: Node2D = null
 const COIN_DROP = 3
 
 func _on_animated_sprite_2d_animation_finished() -> void:
@@ -24,6 +26,11 @@ func _ready():
         animated_sprite_2d.flip_h = false
     elif shoot_direction.x < 0:
         animated_sprite_2d.flip_h = true
+    # Find player reference
+    await get_tree().process_frame
+    var players = get_tree().get_nodes_in_group("player")
+    if players.size() > 0:
+        player_ref = players[0]
     # Off-screen optimization
     var notifier = VisibleOnScreenNotifier2D.new()
     notifier.rect = Rect2(-20, -20, 40, 40)
@@ -34,12 +41,17 @@ func _ready():
 func _on_fire_timer_timeout():
     if is_dead:
         return
+    # Always fire regardless of player location
     animated_sprite_2d.play("shooting")
     var fireball = FIREBALL_SCENE.instantiate()
     get_parent().add_child(fireball)
-    # Spawn fireball in front of slime based on direction
-    var spawn_offset = Vector2(shoot_direction.x * 12, -5)
-    fireball.global_position = global_position + spawn_offset
+    # Spawn fireball at Marker2D position + offset in shoot direction for the mouth
+    if muzzle_node:
+        var spawn_pos = muzzle_node.global_position
+        spawn_pos.x += shoot_direction.x * 10  # Offset to front of mouth
+        fireball.global_position = spawn_pos
+    else:
+        fireball.global_position = global_position + Vector2(shoot_direction.x * 10, 0)
     fireball.direction = shoot_direction
     if not animated_sprite_2d.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
         animated_sprite_2d.animation_finished.connect(_on_animated_sprite_2d_animation_finished)

@@ -1,34 +1,47 @@
-# player_projectile.gd — Throwing knife / ranged attack projectile
-# IMAGE KEYWORD: "pixel art throwing knife sprite sheet 16x16" or "pixel art kunai projectile"
+# player_projectile.gd — Player's arrow projectile (glowing version of skeleton archer arrow)
 extends Area2D
 
-var direction: int = 1
-const SPEED = 180.0
+var vel: Vector2 = Vector2.ZERO
+const SPEED = 160.0
+const GRAVITY = 400.0  # Same as skeleton archer arrow
 var damage: int = 1
+var direction: int = 1
 
 func _ready() -> void:
 	add_to_group("projectile")
-	# Create placeholder visuals if no sprite assigned
-	if not has_node("Sprite2D"):
-		var sprite = Sprite2D.new()
-		sprite.name = "Sprite2D"
-		add_child(sprite)
-	# Auto-destroy after 3 seconds
-	get_tree().create_timer(3.0).timeout.connect(queue_free)
+	add_to_group("player_projectile")
+	# Auto-destroy after 4 seconds
+	var t = Timer.new()
+	t.wait_time = 4.0
+	t.one_shot = true
+	t.autostart = true
+	add_child(t)
+	t.timeout.connect(queue_free)
 
 func set_direction(dir: int) -> void:
 	direction = dir
-	if has_node("Sprite2D"):
-		$Sprite2D.flip_h = dir < 0
-	scale.x = dir
+	# Initial velocity - shoot in direction with slight upward arc
+	vel = Vector2(dir * SPEED, -50)
+	rotation = vel.angle()
+	scale.x = 1  # Don't flip, rotation handles direction
 
-# Placeholder visual — remove when real sprites are added
+# Glowing arrow visual - cyan/blue glow to distinguish from enemy arrows
 func _draw() -> void:
-	draw_rect(Rect2(-4, -2, 8, 4), Color(0.0, 0.85, 1.0))
-	draw_rect(Rect2(-4, -2, 8, 4), Color.WHITE, false, 1.0)
+	# Outer glow
+	draw_circle(Vector2.ZERO, 6, Color(0.0, 0.8, 1.0, 0.3))
+	# Arrow body
+	draw_line(Vector2(-6, 0), Vector2(6, 0), Color(0.0, 0.9, 1.0), 2.0)
+	# Arrow head
+	draw_line(Vector2(6, 0), Vector2(3, -2), Color(0.0, 0.9, 1.0), 2.0)
+	draw_line(Vector2(6, 0), Vector2(3, 2), Color(0.0, 0.9, 1.0), 2.0)
+	# Inner bright core
+	draw_line(Vector2(-4, 0), Vector2(4, 0), Color(1.0, 1.0, 1.0, 0.8), 1.0)
 
 func _physics_process(delta: float) -> void:
-	position.x += direction * SPEED * delta
+	vel.y += GRAVITY * delta
+	position += vel * delta
+	rotation = vel.angle()
+	queue_redraw()
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_hit"):
@@ -38,16 +51,15 @@ func _on_body_entered(body: Node2D) -> void:
 
 func _on_area_entered(area: Area2D) -> void:
 	# Don't collide with other player projectiles
-	if area.is_in_group("projectile"):
+	if area.is_in_group("projectile") or area.is_in_group("player_projectile"):
 		return
 	if area.has_method("take_hit"):
 		area.take_hit(damage, "ranged")
 	queue_free()
 
 func reflect() -> void:
+	vel = -vel
 	direction *= -1
-	scale.x = direction
-	# Reflected projectiles damage enemies
 	damage = 2
-	# Remove from projectile group so player doesn't re-reflect
 	remove_from_group("projectile")
+	remove_from_group("player_projectile")

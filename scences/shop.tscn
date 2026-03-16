@@ -93,6 +93,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 1, 0.6, 1)
 text = "⚡ Speed Lv0 → Lv1 (5 coins)"
 
+[node name="StaminaBtn" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.3, 1)
+text = "🔋 Stamina 100% → 117% (4 coins)"
+
 [node name="PotionBtn" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.5, 0.7, 1)
