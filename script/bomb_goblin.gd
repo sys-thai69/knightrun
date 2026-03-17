@@ -6,7 +6,7 @@ extends CharacterBody2D
 const SPEED = 70.0
 const DETECTION_RANGE = 130.0
 const EXPLODE_RANGE = 25.0
-const EXPLODE_DELAY = 1.0
+const EXPLODE_DELAY = 0.5  # Faster explosion - reduced from 1.0
 const EXPLODE_DAMAGE = 1
 const EXPLODE_RADIUS = 40.0
 const COIN_DROP = 3

@@ -84,9 +84,9 @@ func drop(drop_dir: int) -> void:
 	scene_root.add_child(self)
 	global_position = global_pos + Vector2(drop_dir * 12, 4)
 	velocity = Vector2(drop_dir * 30, -20)
-	# Restore collision
-	set_collision_layer_value(1, true)
-	set_collision_mask_value(1, true)
+	# Restore collision using deferred calls to avoid physics state conflict
+	set_collision_layer_value.call_deferred(1, true)
+	set_collision_mask_value.call_deferred(1, true)
 	# Re-find player reference after reparenting
 	_find_player.call_deferred()
 	queue_redraw()

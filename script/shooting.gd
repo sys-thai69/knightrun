@@ -1,6 +1,5 @@
 extends Area2D
 const FIREBALL_SCENE = preload("res://enemy/fireball.tscn")
-const DETECTION_RANGE: float = 150.0  # Only shoot when player is nearby
 @onready var fire_timer: Timer = $FireTimer
 @onready var timer: Timer = $Timer
 @onready var muzzle_node: Marker2D = $Marker2D

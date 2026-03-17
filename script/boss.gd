@@ -60,6 +60,10 @@ var homing_scene: PackedScene = preload("res://scenes/homing_projectile.tscn")
 var base_sprite_scale: Vector2 = Vector2.ONE
 var pop_tween: Tween = null
 
+# --- Contact Damage (standing on boss) ---
+var _contact_dmg_timer: float = 0.0
+const CONTACT_DMG_INTERVAL: float = 0.8
+
 # --- Attack Telegraphing ---
 var telegraph_tween: Tween = null
 
@@ -87,8 +91,6 @@ func _ready() -> void:
     # Pre-generate shockwave texture
     _create_shockwave_texture()
     # Setup attack area signal for real-time hit detection
-    if attack_area:
-        attack_area.body_entered.connect(_on_attack_area_body_entered)
     # Setup hurt area for body contact damage
     _setup_hurt_area()
     # Find the player
@@ -109,7 +111,7 @@ func _setup_hurt_area() -> void:
         hurt_area.collision_mask = 2  # Detect player
         var shape = CollisionShape2D.new()
         var rect = RectangleShape2D.new()
-        rect.size = Vector2(20, 26)
+        rect.size = Vector2(38, 50)
         shape.shape = rect
         shape.position = Vector2(0, 0)
         hurt_area.add_child(shape)
@@ -117,21 +119,14 @@ func _setup_hurt_area() -> void:
     if hurt_area:
         hurt_area.body_entered.connect(_on_hurt_area_body_entered)
 
-func _on_attack_area_body_entered(body: Node2D) -> void:
-    # Real-time attack hit detection (triggers when player enters attack area during attack)
-    if is_dead:
-        return
-    # Only deal damage if attack collision is active (attack is happening)
-    if attack_collision and not attack_collision.disabled:
-        if body.is_in_group("player") and body.has_method("take_damage"):
-            body.take_damage(1)
-
 func _on_hurt_area_body_entered(body: Node2D) -> void:
-    # Body contact damage (during charge)
+    # Immediate damage on body contact — extra hit during charge
     if is_dead:
         return
-    if is_charging and body.is_in_group("player") and body.has_method("take_damage"):
-        body.take_damage(2)
+    if body.is_in_group("player") and body.has_method("take_damage") and not body.invincible:
+        var dmg = 2 if is_charging else 1
+        body.take_damage(dmg)
+        _contact_dmg_timer = CONTACT_DMG_INTERVAL
 
 func _create_shockwave_texture() -> void:
     # Pre-generate the shockwave ring texture once
@@ -176,8 +171,7 @@ func _physics_process(delta: float) -> void:
             if dir_to_player != 0:
                 sprite.flip_h = dir_to_player < 0
                 if attack_area:
-                    attack_area.scale.x = dir_to_player
-
+                 attack_area.position.x = 32.0 * dir_to_player  # Increased melee reach from 25 to 32
         # --- Charge Attack ---
         if is_charging:
             charge_timer -= delta
@@ -199,6 +193,15 @@ func _physics_process(delta: float) -> void:
             return
 
         # Don't pick new actions while acting
+        # Contact damage — damage player if standing on/touching boss
+        _contact_dmg_timer -= delta
+        if _contact_dmg_timer <= 0 and hurt_area:
+            for body in hurt_area.get_overlapping_bodies():
+                if body.is_in_group("player") and body.has_method("take_damage") and not body.invincible:
+                    body.take_damage(1)
+                    _contact_dmg_timer = CONTACT_DMG_INTERVAL
+                    break
+
         if is_acting:
             velocity.x = move_toward(velocity.x, 0, 200.0 * delta)
             move_and_slide()
@@ -240,43 +243,46 @@ func _melee_attack() -> void:
     velocity.x = 0
     attack_timer = attack_cooldown
     _attack_hit_this_swing = false
-    
-    # Telegraph attack with color flash
+
+    # Lock facing direction before acting so attack area is correctly placed
+    if player_ref and is_instance_valid(player_ref):
+        var atk_dir = int(sign(player_ref.global_position.x - global_position.x))
+        if atk_dir != 0:
+            sprite.flip_h = atk_dir < 0
+            attack_area.position.x = 32.0 * atk_dir  # Increased melee reach
+
+    # Telegraph
     _telegraph_attack()
     await get_tree().create_timer(0.15).timeout
     if is_dead or not is_instance_valid(self):
         return
-    
-    _play("attack")
 
-    if attack_collision:
-        attack_collision.disabled = false
-    
-    # Continuously check for hits during the attack swing
-    var attack_duration = 0.5
-    var elapsed = 0.0
-    while elapsed < attack_duration:
+    _play("attack")
+    attack_collision.disabled = false
+
+    # Wait one physics frame so overlap detection updates
+    await get_tree().physics_frame
+
+    # Poll every physics frame for 0.5s
+    var elapsed: float = 0.0
+    while elapsed < 0.5:
         if is_dead or not is_instance_valid(self):
+            attack_collision.disabled = true
             return
-        if not _attack_hit_this_swing:
-            _deal_attack_damage(1)
-        await get_tree().process_frame
+        if not _attack_hit_this_swing and attack_area:
+            for body in attack_area.get_overlapping_bodies():
+                if body.is_in_group("player") and body.has_method("take_damage"):
+                    if not body.invincible:
+                        body.take_damage(1)
+                        ScreenEffects.hit_freeze(0.04)
+                    _attack_hit_this_swing = true
+                    break
+        await get_tree().physics_frame
         elapsed += get_physics_process_delta_time()
 
-    if attack_collision:
-        attack_collision.disabled = true
+    attack_collision.disabled = true
     is_acting = false
     _play("idle")
-
-func _deal_attack_damage(damage: int) -> void:
-    # Helper function to deal damage to overlapping players
-    if attack_area:
-        for body in attack_area.get_overlapping_bodies():
-            if body.is_in_group("player") and body.has_method("take_damage"):
-                if not body.invincible:  # Only hit if player isn't invincible
-                    body.take_damage(damage)
-                    _attack_hit_this_swing = true
-                return
 
 func _combo_attack(dir: int) -> void:
     # Phase 3 combo: charge into melee
@@ -307,12 +313,20 @@ func _combo_attack(dir: int) -> void:
     if attack_collision:
         attack_collision.disabled = false
     _play("attack")
-    _deal_attack_damage(2)  # Damage on swing start
+    await get_tree().physics_frame
+    if attack_area:
+        for body in attack_area.get_overlapping_bodies():
+            if body.is_in_group("player") and body.has_method("take_hit"):
+                body.take_hit(2, "melee")
     await get_tree().create_timer(0.4).timeout
     if is_dead or not is_instance_valid(self):
         return
     
-    _deal_attack_damage(2)  # Damage on swing end
+    await get_tree().physics_frame
+    if attack_area:
+        for body in attack_area.get_overlapping_bodies():
+            if body.is_in_group("player") and body.has_method("take_hit"):
+                body.take_hit(2, "melee")
     
     if attack_collision:
         attack_collision.disabled = true

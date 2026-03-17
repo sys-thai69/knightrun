@@ -174,7 +174,7 @@ animations = [{
 size = Vector2(40, 54)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-size = Vector2(51, 52)
+size = Vector2(55, 60)
 
 [node name="Boss" type="CharacterBody2D"]
 position = Vector2(-13, -11)
@@ -200,6 +200,6 @@ collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
-position = Vector2(-9.5, 6)
+position = Vector2(-24, 5)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
