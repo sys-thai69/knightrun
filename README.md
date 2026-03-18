@@ -3,7 +3,7 @@
 **Knightfall** is a fantasy-themed 2D action platformer game where you control a lone knight, navigating through dark dungeons filled with monsters and traps. The ultimate goal is to complete an ancient trial by defeating a final boss.
 
 ## 🎮 Final Version Gameplay
-[![Knightfall Final Gameplay](https://img.youtube.com/vi/-1KYthchZm8/0.jpg)](https://youtu.be/-1KYthchZm8)
+[![Knightfall Final Gameplay](https://i.ytimg.com/vi/-1KYthchZm8/mqdefault.jpg)](https://youtu.be/-1KYthchZm8)
 
 *Click the image above to watch the gameplay video*
 
