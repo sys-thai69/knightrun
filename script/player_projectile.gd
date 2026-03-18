@@ -2,8 +2,8 @@
 extends Area2D
 
 var vel: Vector2 = Vector2.ZERO
-const SPEED = 210.0  # Increased from 160.0 for more momentum
-const GRAVITY = 400.0
+const SPEED = 260.0  # Faster flight speed for stronger momentum
+const GRAVITY = 360.0
 var damage: int = 1
 
 func _ready() -> void:
@@ -17,7 +17,7 @@ func _ready() -> void:
 	t.timeout.connect(queue_free)
 
 func set_direction(dir: int) -> void:
-	vel = Vector2(dir * SPEED, -60)  # Increased upward velocity for more arc
+	vel = Vector2(dir * SPEED, -70)
 	rotation = vel.angle()
 
 func _physics_process(delta: float) -> void:

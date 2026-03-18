@@ -47,6 +47,10 @@ var best_time: float = 0.0  # Best completion time in seconds
 var time_trial_active: bool = false
 var time_trial_elapsed: float = 0.0
 
+# --- Completion/Bonus Flags ---
+var boss_defeated: bool = false
+var easter_egg_found: bool = false
+
 # --- Lore Scrolls ---
 var lore_scrolls_found: Array = []  # Array of scroll IDs
 const TOTAL_LORE_SCROLLS = 5
@@ -193,6 +197,8 @@ func reset_all() -> void:
 	best_time = 0.0
 	time_trial_active = false
 	time_trial_elapsed = 0.0
+	boss_defeated = false
+	easter_egg_found = false
 	lore_scrolls_found = []
 	collected_coins = []  # Reset collected coins on full reset
 	has_checkpoint = false
@@ -224,6 +230,8 @@ func start_new_game_plus() -> void:
 	total_coins_earned = 0
 	has_checkpoint = false
 	checkpoint_position = Vector2.ZERO
+	boss_defeated = false
+	easter_egg_found = false
 	max_health = get_max_health()
 	current_health = max_health
 	coins_changed.emit(coins)

@@ -6,7 +6,7 @@ extends CharacterBody2D
 signal boss_defeated
 
 # --- Stats ---
-const MAX_HEALTH: int = 60
+const MAX_HEALTH: int = 48
 var health: int = MAX_HEALTH
 var scaled_max_health: int = MAX_HEALTH  # Actual max after NG+ scaling
 var is_dead: bool = false
@@ -14,7 +14,7 @@ var is_dead: bool = false
 # --- Mahoraga Adaptation System ---
 var damage_from_melee: int = 0
 var damage_from_distance: int = 0
-var adaptation_threshold: int = 5
+var adaptation_threshold: int = 8
 var melee_resistance: float = 0.0
 var ranged_resistance: float = 0.0
 var phase: int = 1  # 1 = slow, 2 = faster, 3 = aggressive
@@ -24,13 +24,13 @@ var direction: int = -1
 const ACTIVATION_RANGE: float = 250.0  # Boss only engages when player is within this range
 var is_activated: bool = false
 const SPEED_PHASE1: float = 40.0
-const SPEED_PHASE2: float = 60.0
-const SPEED_PHASE3: float = 80.0
+const SPEED_PHASE2: float = 52.0
+const SPEED_PHASE3: float = 66.0
 var current_speed: float = SPEED_PHASE1
 
 # --- Action State ---
 var is_acting: bool = false  # True when attacking/blocking/adapting
-var attack_cooldown: float = 2.0
+var attack_cooldown: float = 2.9
 var attack_timer: float = 0.0
 var player_ref: CharacterBody2D = null
 var gravity: float = 800.0
@@ -49,7 +49,7 @@ const SLAM_DAMAGE_RADIUS: float = 80.0  # Shockwave radius
 
 # --- Block ---
 var is_blocking: bool = false
-var block_chance: float = 0.3  # 30% chance to block incoming damage
+var block_chance: float = 0.15  # Lower block chance for fairer damage windows
 
 # --- 50% HP Summon ---
 var has_summoned_backup: bool = false
@@ -62,7 +62,7 @@ var pop_tween: Tween = null
 
 # --- Contact Damage (standing on boss) ---
 var _contact_dmg_timer: float = 0.0
-const CONTACT_DMG_INTERVAL: float = 0.8
+const CONTACT_DMG_INTERVAL: float = 1.15
 
 # --- Attack Telegraphing ---
 var telegraph_tween: Tween = null
@@ -124,7 +124,7 @@ func _on_hurt_area_body_entered(body: Node2D) -> void:
     if is_dead:
         return
     if body.is_in_group("player") and body.has_method("take_damage") and not body.invincible:
-        var dmg = 2 if is_charging else 1
+        var dmg = 1
         body.take_damage(dmg)
         _contact_dmg_timer = CONTACT_DMG_INTERVAL
 
@@ -171,7 +171,7 @@ func _physics_process(delta: float) -> void:
             if dir_to_player != 0:
                 sprite.flip_h = dir_to_player < 0
                 if attack_area:
-                 attack_area.position.x = 32.0 * dir_to_player  # Increased melee reach from 25 to 32
+                    attack_area.position.x = 16.0 * dir_to_player
         # --- Charge Attack ---
         if is_charging:
             charge_timer -= delta
@@ -208,7 +208,7 @@ func _physics_process(delta: float) -> void:
             return
 
         # --- Phase-based AI ---
-        if dist < 50 and attack_timer <= 0:
+        if dist < 38 and attack_timer <= 0:
             _melee_attack()
         elif phase >= 2 and dist > 180 and attack_timer <= 0:
             _ranged_attack(dir_to_player)
@@ -249,7 +249,7 @@ func _melee_attack() -> void:
         var atk_dir = int(sign(player_ref.global_position.x - global_position.x))
         if atk_dir != 0:
             sprite.flip_h = atk_dir < 0
-            attack_area.position.x = 32.0 * atk_dir  # Increased melee reach
+            attack_area.position.x = 16.0 * atk_dir
 
     # Telegraph
     _telegraph_attack()
@@ -491,12 +491,12 @@ func take_hit(damage: int, source_type: String = "melee") -> void:
 
     # Adapt after threshold
     if damage_from_melee >= adaptation_threshold:
-        melee_resistance = min(melee_resistance + 0.25, 0.75)
+        melee_resistance = min(melee_resistance + 0.12, 0.5)
         damage_from_melee = 0
         _adaptation_effect()
 
     if damage_from_distance >= adaptation_threshold:
-        ranged_resistance = min(ranged_resistance + 0.25, 0.75)
+        ranged_resistance = min(ranged_resistance + 0.12, 0.5)
         damage_from_distance = 0
         _adaptation_effect()
 
@@ -527,19 +527,19 @@ func _check_phase() -> void:
         has_summoned_backup = true
         _summon_backup()
         # Boost resistances
-        melee_resistance = min(melee_resistance + 0.3, 0.75)
-        ranged_resistance = min(ranged_resistance + 0.3, 0.75)
+        melee_resistance = min(melee_resistance + 0.1, 0.5)
+        ranged_resistance = min(ranged_resistance + 0.1, 0.5)
     
     if hp_percent <= 0.3 and phase < 3:
         phase = 3
         current_speed = SPEED_PHASE3
-        attack_cooldown = 1.0
-        block_chance = 0.4  # More defensive in final phase
+        attack_cooldown = 1.65
+        block_chance = 0.22
         _phase_transition_effect(3)
     elif hp_percent <= 0.6 and phase < 2:
         phase = 2
         current_speed = SPEED_PHASE2
-        attack_cooldown = 1.5
+        attack_cooldown = 2.1
         _phase_transition_effect(2)
 
 func _summon_backup() -> void:
@@ -587,6 +587,8 @@ func _phase_transition_effect(new_phase: int) -> void:
 func die() -> void:
     is_dead = true
     velocity = Vector2.ZERO
+    PlayerData.boss_defeated = true
+    SaveManager.save_game()
     boss_defeated.emit()
     AchievementManager.check_and_unlock("boss_slayer")
     ScreenEffects.shake(3.0, 0.2)

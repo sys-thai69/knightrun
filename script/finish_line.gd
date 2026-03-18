@@ -1,5 +1,6 @@
 extends Area2D
 const WIN_SCREEN_SCENE = preload("res://scences/win_screen.tscn")
+@export var require_boss_defeat: bool = true
 
 var triggered: bool = false
 
@@ -14,6 +15,9 @@ func _on_body_entered(body: Node2D) -> void:
     if triggered:
         return
     if not body.is_in_group("player"):
+        return
+    if require_boss_defeat and not PlayerData.boss_defeated:
+        ScreenEffects.spawn_text_popup(global_position, "Defeat the boss to complete the run!", Color.ORANGE_RED)
         return
     triggered = true
     handle_win()

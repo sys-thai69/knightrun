@@ -17,6 +17,7 @@ const ACHIEVEMENTS = {
 	"speedrunner": {"name": "Speedrunner", "desc": "Beat the game in under 5 minutes"},
 	"parry_master": {"name": "Parry Master", "desc": "Successfully parry 10 times"},
 	"no_shop": {"name": "Purist", "desc": "Beat the game without buying upgrades"},
+	"secret_finder": {"name": "Secret Finder", "desc": "Discover the hidden shrine"},
 }
 
 var popup_queue: Array = []

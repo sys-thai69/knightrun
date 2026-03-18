@@ -22,6 +22,8 @@ func save_game() -> void:
 		"ng_plus_level": PlayerData.ng_plus_level,
 		"achievements": PlayerData.achievements_unlocked,
 		"best_time": PlayerData.best_time,
+		"boss_defeated": PlayerData.boss_defeated,
+		"easter_egg_found": PlayerData.easter_egg_found,
 		"lore_scrolls_found": PlayerData.lore_scrolls_found,
 		"collected_coins": PlayerData.collected_coins,
 	}
@@ -57,6 +59,8 @@ func load_game() -> bool:
 		PlayerData.ng_plus_level = save_data.get("ng_plus_level", 0)
 		PlayerData.achievements_unlocked = save_data.get("achievements", [])
 		PlayerData.best_time = save_data.get("best_time", 0.0)
+		PlayerData.boss_defeated = save_data.get("boss_defeated", false)
+		PlayerData.easter_egg_found = save_data.get("easter_egg_found", false)
 		PlayerData.lore_scrolls_found = save_data.get("lore_scrolls_found", [])
 		PlayerData.collected_coins = save_data.get("collected_coins", [])
 		PlayerData.full_heal()
